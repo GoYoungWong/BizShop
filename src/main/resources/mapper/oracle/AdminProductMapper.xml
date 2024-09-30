@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.adminproduct.AdminProductMapper">
+
+   <insert id="pro_insert" parameterType="AdminProductVO">
+   	INSERT INTO
+   		product_tbl(pro_num, cat_code, pro_name, pro_price, pro_publisher, pro_content, pro_up_folder, pro_img, pro_amount, pro_buy)
+   	VALUES
+   		(SEQ_PRO_NUM.NEXTVAL, #{cat_code},#{pro_name},#{pro_price},#{pro_publisher},#{pro_content},#{pro_up_folder},#{pro_img},#{pro_amount},#{pro_buy})
+   
+   
+   
+   </insert>
+
+	<!--  검색조건이 1)목록 2)총데이타 개수 공통사항 -->
+	<!-- 검색종류가 (상품명 또는 제조사 또는 내용) 선택.  "N"  "P"   "C" -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach collection="typeArr" item="type">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'N'.toString()">
+							pro_name like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'P'.toString()">
+							pro_publisher like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'C'.toString()">
+							pro_content like '%' || #{keyword} || '%'
+						</when>
+					</choose>
+				</trim>			
+			</foreach>
+		</trim>
+	</sql>
+	
+	<select id="pro_list" resultType="com.docmall.basic.adminproduct.AdminProductVO" parameterType="com.docmall.basic.common.dto.Criteria">
+		
+		SELECT
+			pro_num, cat_code, pro_name, pro_price, pro_publisher, pro_content, pro_up_folder, pro_img, pro_amount, pro_buy, pro_date, pro_updatedate
+		FROM
+			(
+			   SELECT /*+ INDEX_DESC(product_tbl SEQ_PRO_NUM) */
+					ROWNUM AS RN, pro_num, cat_code, pro_name, pro_price, pro_publisher, pro_content, pro_up_folder, pro_img, pro_amount, pro_buy, pro_date, pro_updatedate
+			   FROM
+			   	   product_tbl
+			   WHERE
+		<include refid="criteria"></include>	   
+			
+		<![CDATA[
+			ROWNUM <= (#{pageNum} * #{amount})
+		]]>	
+		)
+		WHERE
+			RN > (#{pageNum} - 1) * #{amount}
+	</select>
+	
+	<!--  공통사항 : 검색조건추가 -->
+	<select id="getTotalCount" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			product_tbl
+		
+		WHERE
+			<include refid="criteria"></include>
+			pro_num > 0
+	</select>
+	
+	<select id="pro_modify" resultType="AdminProductVO" parameterType="Integer">
+		
+		SELECT
+			pro_num, cat_code, pro_name, pro_price, pro_publisher, pro_content, pro_up_folder, pro_img, pro_amount, pro_buy, pro_date, pro_updatedate
+		FROM
+			product_tbl
+		WHERE
+			pro_num = #{pro_num}
+	
+	</select>
+	
+	
+	<update id="pro_modify_ok" parameterType="AdminProductVO">
+	
+		UPDATE
+			product_tbl
+		SET
+			cat_code = #{cat_code}, 
+			pro_name = #{pro_name}, 
+			pro_price = #{pro_price}, 
+			pro_publisher = #{pro_publisher}, 
+			pro_content = #{pro_content}, 
+			pro_up_folder = #{pro_up_folder}, 
+			pro_img = #{pro_img}, 
+			pro_amount = #{pro_amount}, 
+			pro_buy = #{pro_buy},
+			pro_updatedate =sysdate
+		WHERE
+			pro_num = #{pro_num}
+	</update>
+	
+	<delete id="pro_delete" parameterType="Integer">
+	DELETE FROM
+		product_tbl
+	WHERE
+		pro_num = #{pro_num}	
+	</delete>
+	
+	<update id="pro_check_box" parameterType="list">
+		
+		<foreach collection="list" item="box" open="declare begin" separator=";" close="; end;">
+			UPDATE
+				product_tbl
+			SET
+				pro_price = #{box.pro_price},pro_buy = #{box.pro_buy}
+			WHERE
+				pro_num = #{box.pro_num}
+		</foreach> 
+	
+	</update>
+		
+
+</mapper>

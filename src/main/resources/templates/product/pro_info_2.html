@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<div class="row">
+        	<div class="col-6">
+        		<img th:src="${'/product/image_display?dateFolderName=' + product.pro_up_folder + '&fileName=' + product.pro_img}" style="width: 100%;height: 400px;">
+        	</div>
+        	<div class="col-6">
+        	<form>
+				<div class="form-group">
+					<span id="info_pro_name" th:text="${product.pro_name}">이름</span>
+				</div>
+  				<div class="form-group">
+			    	<label for="exampleFormControlInput1">판매가격: </label><span th:text="${#numbers.formatInteger(product.pro_price, 3, 'COMMA') + '원'}"></span>
+				</div>
+			    <div class="form-group">
+					<label>수량</label>
+					<input type="number" class="form-control col-6" value="1" id="btn_cart_amount">
+			    </div>
+			    <div class="form-group">
+					<button type="button" class="btn btn-secondary" style="width: 80%;" th:data-pro_num="${product.pro_num}" id="btn_direct_buy">BUY IT NOW</button>
+					<button type="button" class="btn btn-light" style="width: 80%;" th:data-pro_num="${product.pro_num}" id="btn_cart_add">ADD TO CART</button>
+			    </div>
+			</form>
+        	
+        	</div>
+        </div>
+
+</html>

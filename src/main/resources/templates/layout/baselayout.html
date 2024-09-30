@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="~{layout/comm/config :: configFragment}"></head>
+<body>
+	<div th:replace="~{layout/comm/header :: headerfragment}"></div>
+	<div th:replace="~{layout/comm/category :: categoryFragment}"></div>
+
+	<th:block layout:fragment = "content">
+    <!-- 각각의 페이지에서 구현하고자 하는 컨텐츠를 작성 -->
+  	</th:block>
+  
+<div th:replace="~{layout/comm/script :: script}"></div>
+
+<th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+</th:block>
+	<script>
+		$(document).ready(function() {
+
+			// 1차카테고리 선택
+			$("div#category_menu li a").on("click", function(e) {   // mouseover - 마우스 올려놓으면 반응
+				e.preventDefault();  // a태그 해제
+
+				let cur_first_category = $(this);
+
+				let cat_code = $(this).data("cat_code");
+
+				// console.log("cat_code", cat_code);
+
+				// 2차카테고리 주소
+				let url = "/admin/category/secondcategory/" + cat_code;
+
+				$.getJSON(url, function(secondcategory_result) {
+
+					let str = '<ul class="nav justify-content-center" id="second_category">';
+					
+					for(let i = 0; i <secondcategory_result.length; ++i) {
+
+						str += '<li class="nav-item">';
+						str += `<a class="nav-link active" href="#" data-cat_code="${secondcategory_result[i].cat_code}">${secondcategory_result[i].cat_name}</a>`;
+						str += '</li>';
+					}
+
+					str += '</ul>';
+					// console.log("2차카테고리", str);
+					cur_first_category.parents("div#category_menu").find("ul#second_category").remove();
+					cur_first_category.parents("div#category_menu").append(str);
+					
+					// 마우스가 벗어났을 때 2차 카테고리 닫기 이벤트 설정
+                    $('ul#second_category').on('mouseleave', function() {
+                        $(this).remove();
+                    });
+					
+				});
+			});
+
+			// 2차 카테고리 선택
+// 2차카테고리 선택
+$("div#category_menu").on("click", "ul#second_category li a", function(e) {
+		e.preventDefault();
+
+		let cat_code = $(this).data("cat_code");
+		let cat_name = encodeURIComponent($(this).html()); // 인코딩작업
+		
+		console.log("2차카테고리코드", cat_code);
+		console.log("2차카테고리이름", cat_name);
+
+		// cat_name=맨투맨&후드티 & 특수문자로 인하여 서버에서는 맨투맨 문자열만 인식됨.
+		location.href = `/product/pro_list?cat_code=${cat_code}&cat_name=${cat_name}`;
+        });
+    });
+  </script>
+</body>
+</html>

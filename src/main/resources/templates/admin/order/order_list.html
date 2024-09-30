@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{admin/layout/adminlayout}">
+  
+  <!--
+  BODY TAG OPTIONS:
+  =================
+  Apply one or more of the following classes to get the
+  desired effect
+  |---------------------------------------------------------|
+  | SKINS         | skin-blue                               |
+  |               | skin-black                              |
+  |               | skin-purple                             |
+  |               | skin-yellow                             |
+  |               | skin-red                                |
+  |               | skin-green                              |
+  |---------------------------------------------------------|
+  |LAYOUT OPTIONS | fixed                                   |
+  |               | layout-boxed                            |
+  |               | layout-top-nav                          |
+  |               | sidebar-collapse                        |
+  |               | sidebar-mini                            |
+  |---------------------------------------------------------|
+  -->
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+      <!-- Main Header -->
+      
+      <!-- Left side column. contains the logo and sidebar -->
+      
+	<th:block layout:fragment="content">
+	<!-- 1) Include Handlebars from a CDN 사용목적 -->
+	<script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script> <!--Handlebars사용이유: 단순이 화면에 보여주기위해 사용 -->
+   
+	<script id="order-product-template" type="text/x-handlebars-template">
+    	
+		<blockquote>
+		<h5><b>[주문상품정보]</b></h5>
+		</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+				  <th>번호</th>
+			      <th scope="col">주문상품</th>
+			      <td scope="col">판매가</td>
+			      <th scope="col">수량</th>
+			      <td scope="col">주문금액</td>
+				  <td scope="col">비고</td>
+			    </tr>
+			  </thead>
+			  <tbody>
+				{{#each .}}
+			    <tr>
+				  <td>1</td>
+			      <td>
+					<img src="/admin/product/image_display?dateFolderName={{pro_up_folder}}&fileName=s_{{pro_img}}" style="width: 80px;height: 130px;">
+				  <span>{{pro_name}}</span>
+				  </td>
+			      <td>{{item_price}}</td>
+			      <td>{{item_amount}}</td>
+			      <td>{{unit_order_tot_price item_price item_amount}}</td>
+			      <th scope="col">
+					<button type="button" name="order_delete_pro" class="btn btn-danger" data-pro_num="{{pro_num}}">삭제</button>
+				</th>
+			    </tr>
+				{{/each}}
+			  </tbody>
+			</table>
+	    </script>
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            주문리스트
+            <small>주문리스트 메뉴입니다.</small>
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="/admin/admin_menu"><i class="fa fa-dashboard"></i>메인페이지</a></li>
+            <li class="active">주문관리</li>
+            <li class="active">주문리스트</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+
+          <!-- Your Page Content Here -->
+          <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <!-- list start -->
+                <div class="row">
+    		<div class="col-md-12">
+    			<div class="box">
+					<div class="box-header with-border">
+					<h3 class="box-title">Order List</h3>
+					</div>
+
+					<div class="box-body">
+						<div>
+							<form action="/admin/order/order_list" method="get" >
+									<select name="type">
+										<option selected th:selected="${''} == ${pageMaker.cri.type}">검색종류선택</option>
+										<option value="N" th:selected="${'N'} == ${pageMaker.cri.type}">주문자이름</option>
+										<option value="O" th:selected="${'O'} == ${pageMaker.cri.type}">주문코드</option>
+										<option value="U" th:selected="${'U'} == ${pageMaker.cri.type}">사용자아이디</option>
+										<option value="NO" th:selected="${'NO'} == ${pageMaker.cri.type}">주문자이름 or 주문코드</option>
+									</select>
+									<input type="text" name="keyword" th:value="${pageMaker.cri.keyword}">
+									<input type="hidden" name="pageNum" th:value="${pageMaker.cri.pageNum}">
+									<input type="hidden" name="amount" th:value="${pageMaker.cri.amount}">
+									<b>날짜검색:</b>
+										<input type="date" name="start_date"> ~ <input type="date" name="end_date">
+									<button type="submit" class="btn btn-primary">검색</button>
+							</form>
+						</div>
+						<table class="table table-bordered">
+							<tbody><tr>
+								<th style="width: 8%">주문코드</th>
+								<th style="width: 10%">주문자</th>
+								<th style="width: 25%">아이디</th>
+								<th style="width: 10%">주문가격</th>
+								<th style="width: 20%">주문일</th>
+								<th style="width: 10%">삭제</th>
+								<th style="width: 10%">배송현황</th>
+								<th style="width: 10%">주문상세보기</th>
+							</tr>
+							
+							<tr th:each="order : ${order_list}">
+								<td><span th:text="${order.order_num }"></span></td>
+								<td>[[${order.order_name}]]</td>
+								<td>[[${order.user_id}]]</td>
+								<td><span th:text="${#numbers.formatInteger(order.order_price,3,'COMMA') + '원'}"></span></td>
+								<td th:text="${#dates.format(order.order_redate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td><button type="button" class="btn btn-danger" name="btn_order_delete" th:data-order_num="${order.order_num}">삭제</button></td>
+								<td>
+									<span th:value="N" th:if="${order.order_status == 'N'}">배송대기중</span>
+									<span th:value="Y" th:if="${order.order_status == 'Y'}">배송중</span>
+									<span th:value="O" th:if="${order.order_status == 'O'}">배송완료</span>
+								</td>
+								<td><button type="button" class="btn btn-primary" name="btn_order_info" th:data-order_num="${order.order_num}">상세보기</button></td>
+							</tr>
+							
+							
+							
+							
+							</tbody></table>
+					</div>
+					<div class="box-footer clearfix">
+						<div class="row">
+							<div class="col-md-4">
+							<!--1)페이지번호 클릭할 때 사용  [이전]  1	2	3	4	5 [다음]  -->
+							<!--2)목록에서 상품이미지 또는 상품명 클릭할 때 사용   -->
+							  <form id="actionForm" action="" method="get">
+								<input type="hidden" name="pageNum" id="pageNum" th:value="${pageMaker.cri.pageNum}" />
+								<input type="hidden" name="amount"  id="amount" th:value="${pageMaker.cri.amount}" />
+								<input type="hidden" name="type" id="type" th:value="${pageMaker.cri.type}" />
+								<input type="hidden" name="keyword" id="keyword" th:value="${pageMaker.cri.keyword}" />
+								
+							  </form>
+							</div>
+							<div class="col-md-6 text-center">
+								<nav aria-label="...">
+								<ul class="pagination">
+									<!-- 이전 표시여부 -->
+									
+									<th:block th:if="${pageMaker.prev }">
+										<li class="page-item">
+											<a th:href="${pageMaker.startPage - 1 }" class="page-link movepage">이전</a>
+										</li>
+									</th:block>
+									
+									<!-- https://jbground.tistory.com/40 페이지번호 출력 -->
+									<!-- 1	2	3	4	5 6	7	8	9	10  [다음] -->
+									<!-- [이전] 11	12	13	14	15 16	17	18	19	20   -->
+
+									<th:block th:with="pageMaker = ${pageMaker}">
+										<th:block th:each="num : *{#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+										<li class='page-item' th:classappend="${pageMaker.cri.pageNum ==  num ? 'active': '' }" aria-current="page">
+											<a class="page-link movepage" th:href="${num }" th:text="${num }"></a>
+										</li>
+										</th:block>
+									</th:block>
+
+									<!--  다음 표시여부 -->
+									<th:block th:if="${pageMaker.next }">
+									  <li class="page-item">
+										<a th:href="${pageMaker.endPage + 1 }" class="page-link movepage">다음</a>
+									  </li>
+									</th:block>
+									
+								</ul>
+								</nav>
+							</div>
+						</div>
+						
+					</div>
+			   </div>
+    		</div>
+    	</div>
+              </div>
+          	</div>
+          </div>
+          
+
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      
+<!-- Modal -->
+<div class="modal fade" id="order_ditail_info" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+	  <div class="modal-dialog modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h3 class="modal-title" id="staticBackdropLabel2"><b>상세정보</b></h3>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="closeButton">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+		  </div>
+		  <!-- load()매서드를 이용하여, pro_info_2.html파일이 실행돈 내용이 삽입된다. -->
+		<div class="model-Body" id="order_info">
+
+		<!-- 주문상품정보 -->		
+		<div id="order_product_info">
+		
+		
+		</div>
+		<hr>
+		<blockquote>
+		<h5><b>[결제정보]</b></h5>
+		</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+			      <th scope="col">결제방식</th>
+			      <td scope="col"><input type="text" id="paymethod" readonly></td>
+			      <th scope="col">결제금액</th>
+			      <td scope="col"><input type="text" id="pay_price" readonly></td>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    <tr>
+			      <th scope="row">입금자명</th>
+			      <td><input type="text" id="user_id" readonly></td>
+			      <th>입금계좌</th>
+			      <td><input type="text" id="payinfo" readonly style="width: 220px;"></td>
+			    </tr>
+			    <tr>
+			      <th scope="row">입금상태</th>
+			      <td><input type="text" id="pay_status" readonly></td>
+			      <th>기타</th>
+			      <td><span>기타</span></td>
+			    </tr>
+			  </tbody>
+			</table>
+			<hr>
+			<blockquote>
+			<h5><b>[주문자(수령인)정보]</b></h5>
+			</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+			      <th scope="col">수령인</th>
+			      <td scope="col">
+			      <input type="text" id="order_name" name="order_name">
+				  <input type="hidden" id="user_id" name="user_id">
+			      </td>
+			      <th scope="col">전화번호</th>
+			      <td scope="col">
+			      <input type="text" id="order_pho">
+			      </td>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    <tr>
+			      <th scope="row">주소</th>
+			      <td Colspan="3">
+			      <button type="button" class="btn btn-outline-primary" onclick="sample2_execDaumPostcode()">우편번호</button>
+			      <input type="text" class="form-control" id="sample2_postcode" name="order_zipcode" placeholder="우편번호 입력하세요.">
+			      <input type="text" class="form-control" id="sample2_address" name="order_addr" placeholder="주소를 입력하세요.">
+			      <input type="text" class="form-control" id="sample2_detailAddress" name="order_deaddr" placeholder="상세주소를 입력하세요.">
+                  <input type="hidden" id="sample2_extraAddress" placeholder="참고항목">
+			      </td>
+			    </tr>
+			    <tr>
+			      <th scope="row">배송메모</th>
+			      <td Colspan="3">
+			      	<textarea rows="3" cols="40" id="order_req" name="order_req"></textarea>
+			    </tr>
+			  </tbody>
+			</table>
+			<hr>
+			<blockquote>
+			  <h5><b>[배송현황]</b></h5>
+			</blockquote>
+			<label for="order_status" class="col-form-label">답변 상태</label>
+			<select class="form-control" id="order_status">
+				<option value="N">배송대기중</option>
+				<option value="Y">배송중</option>
+				<option value="O">배송완료</option>
+			</select>
+			<hr>
+			<blockquote>
+			<h3><b>관리자메모</b></h3>
+			</blockquote>
+				<blockquote>
+				<textarea rows="3" cols="80" id="order_admin_memo">관리자내용</textarea>
+				</blockquote>
+				<blockquote>
+				<button type="button" id="btn_base_modify" class="btn btn-dark">수정완료</button>
+				</blockquote>
+			</div>
+		
+ 	  </div>
+   </div>
+</div>	
+     <!-- iOS에서는 position:fixed 버그가 있음, 적용하는 사이트에 맞게 position:absolute 등을 이용하여 top,left값 조정 필요 -->
+
+<!-- modal창의 화면보다 우선으로 우편번호 창이 앞에 나오게 할려면 두군데 z-index:1060 변경 -->
+<div id="layer" style="display:none;position:fixed;overflow:hidden;z-index:1060;-webkit-overflow-scrolling:touch;">
+	<img src="//t1.daumcdn.net/postcode/resource/images/close.png" id="btnCloseLayer" style="cursor:pointer;position:absolute;right:-3px;top:-3px;z-index:1060" onclick="closeDaumPostcode()" alt="닫기 버튼">
+  </div>
+  
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script>
+      // 우편번호 찾기 화면을 넣을 element
+      var element_layer = document.getElementById('layer');
+  
+      function closeDaumPostcode() {
+          // iframe을 넣은 element를 안보이게 한다.
+          element_layer.style.display = 'none';
+      }
+  
+      function sample2_execDaumPostcode() {
+          new daum.Postcode({
+              oncomplete: function(data) {
+                  // 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+  
+                  // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                  // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                  var addr = ''; // 주소 변수
+                  var extraAddr = ''; // 참고항목 변수
+  
+                  //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                  if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                      addr = data.roadAddress;
+                  } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                      addr = data.jibunAddress;
+                  }
+  
+                  // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+                  if(data.userSelectedType === 'R'){
+                      // 법정동명이 있을 경우 추가한다. (법정리는 제외)
+                      // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
+                      if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                          extraAddr += data.bname;
+                      }
+                      // 건물명이 있고, 공동주택일 경우 추가한다.
+                      if(data.buildingName !== '' && data.apartment === 'Y'){
+                          extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                      }
+                      // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
+                      if(extraAddr !== ''){
+                          extraAddr = ' (' + extraAddr + ')';
+                      }
+                      // 조합된 참고항목을 해당 필드에 넣는다.
+                      document.getElementById("sample2_extraAddress").value = extraAddr;
+                  
+                  } else {
+                      document.getElementById("sample2_extraAddress").value = '';
+                  }
+  
+                  // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                  document.getElementById('sample2_postcode').value = data.zonecode;
+                  document.getElementById("sample2_address").value = addr;
+                  // 커서를 상세주소 필드로 이동한다.
+                  document.getElementById("sample2_detailAddress").focus();
+  
+                  // iframe을 넣은 element를 안보이게 한다.
+                  // (autoClose:false 기능을 이용한다면, 아래 코드를 제거해야 화면에서 사라지지 않는다.)
+                  element_layer.style.display = 'none';
+              },
+              width : '100%',
+              height : '100%',
+              maxSuggestItems : 5
+          }).embed(element_layer);
+  
+          // iframe을 넣은 element를 보이게 한다.
+          element_layer.style.display = 'block';
+  
+          // iframe을 넣은 element의 위치를 화면의 가운데로 이동시킨다.
+          initLayerPosition();
+      }
+  
+      // 브라우저의 크기 변경에 따라 레이어를 가운데로 이동시키고자 하실때에는
+      // resize이벤트나, orientationchange이벤트를 이용하여 값이 변경될때마다 아래 함수를 실행 시켜 주시거나,
+      // 직접 element_layer의 top,left값을 수정해 주시면 됩니다.
+      function initLayerPosition(){
+          var width = 300; //우편번호서비스가 들어갈 element의 width
+          var height = 400; //우편번호서비스가 들어갈 element의 height
+          var borderWidth = 5; //샘플에서 사용하는 border의 두께
+  
+          // 위에서 선언한 값들을 실제 element에 넣는다.
+          element_layer.style.width = width + 'px';
+          element_layer.style.height = height + 'px';
+          element_layer.style.border = borderWidth + 'px solid';
+          // 실행되는 순간의 화면 너비와 높이 값을 가져와서 중앙에 뜰 수 있도록 위치를 계산한다.
+          element_layer.style.left = (((window.innerWidth || document.documentElement.clientWidth) - width)/2 - borderWidth) + 'px';
+          element_layer.style.top = (((window.innerHeight || document.documentElement.clientHeight) - height)/2 - borderWidth) + 'px';
+      }
+  </script> 
+      
+      
+      
+      
+      
+    </th:block>
+
+      <!-- Main Footer -->
+      
+
+      <!-- Control Sidebar -->
+      
+    
+
+    <!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+    <script>
+
+      $(document).ready(function() {
+        
+        let actionForm = $("#actionForm");
+		let order_num; // 전역변수 뺌
+        
+		// 페이지번호 클릭시(이전  1  2  3  4  5  다음) actionForm 을 사용한다.
+        $(".movepage").on("click", function(e) {
+			e.preventDefault();   // a태그의 href기능 제거
+			// 주소변경
+			actionForm.attr("action", "/admin/order/order_list"); // <form id="actionForm" action="" method="get"> action주소를 변경
+        	// 클릭한 페이지번호 작업
+        	// pageNum이라는 이름의 숨겨진 입력 필드를 찾아서, 클릭된 페이지 번호 링크의 href 속성 값을 해당 입력 필드에 설정
+        	actionForm.find("input[name='pageNum']").val($(this).attr("href")); // $(this): 현재클릭한 태그를 가르킴
+        	
+        	// 전송
+			actionForm.submit();
+        
+        });
+        
+        // 상세보기 클릭
+        $("button[name='btn_order_info']").on("click", function() {
+			order_num = $(this).data("order_num"); // 전역변수에 할당
+        	order_detail_info();
+			
+		});
+
+	function order_detail_info() {	
+		$("#order_ditail_info").modal('show');
+			
+			$.ajax({
+				url: '/admin/order/order_detail_info',
+				type: 'get',
+				data: {order_num : order_num},
+				dataType: 'json',
+				success: function(result) {
+					console.log(result);
+
+					// 주문자(수령인) 작업
+					$("#order_name").val(result.order_basic.order_name);
+					$("#order_pho").val(result.order_basic.order_pho);
+					$("#sample2_postcode").val(result.order_basic.order_zipcode);
+					$("#sample2_address").val(result.order_basic.order_addr);
+					$("#sample2_detailAddress").val(result.order_basic.order_deaddr);
+					$("#order_req").val(result.order_basic.order_req);
+				
+					// 주문상품정보										// 주문정보가 삽입될 위치   // template
+					print_order_product_info(result.order_pro_list,$("#order_product_info"), $("#order-product-template"));
+					
+					// 결제정보
+					$("#paymethod").val(result.payinfo.paymethod);
+					$("#pay_price").val(result.payinfo.pay_price);
+					$("#user_id").val(result.payinfo.user_id);
+					$("#payinfo").val(result.payinfo.payinfo);
+					$("#pay_status").val(result.payinfo.pay_status);
+				},
+				error:function() {
+
+				}
+			});
+        }
+
+		// 주문상품 개별삭제 name='order_delete_pro'
+		$("div#order_info div#order_product_info").on("click", "button[name='order_delete_pro']", function() {
+			if(!confirm("삭제하시겠습니까?")) return;
+			
+			// order_num : 주문번호는 상세보기 클릭시 위에 전역변수로 선언.
+
+			let pro_num = $(this).data("pro_num");
+
+			$.ajax({
+				url: '/admin/order/order_individual_delete',
+				type: 'get',
+				data: {order_num : order_num, pro_num: pro_num},
+				dataType: 'text',
+				success: function(result) {
+					if(result == 'success') {
+					alert("주문상품이 삭제되었습니다.");
+					order_detail_info();
+				}
+			},
+			error:function() {
+
+			}
+			
+		});
+		
+	});
+
+	// 기본 주문(수령)정보 수정하기 btn_base_modify
+	$("button#btn_base_modify").on("click", function() {
+
+		// order_num: 전역변수
+		// user_id : 세션에서 참조하면 안됨. 히든으로 수령인 밑에 숨김 
+
+			let order_base_data = {
+				order_num : order_num, order_name: $("#order_name").val(),user_id : $("#user_id").val() 
+				,order_zipcode : $("#sample2_postcode").val(), order_addr: $("#sample2_address").val(), order_deaddr: $("#sample2_detailAddress").val(),
+				order_pho: $("#order_pho").val(), order_req: $("#order_req").val(), order_admin_memo:$("#order_admin_memo").val(), order_status : $("#order_status").val()}
+
+
+			$.ajax({
+				url: '/admin/order/order_base_modify',
+				type: 'post',
+				data: order_base_data,
+				dataType: 'text',
+				success: function(result) {
+					if(result == 'success') {
+					alert("기본정보가 수정되었습니다.");
+					order_detail_info();
+					location.reload(true);
+					
+				}
+			},
+			error:function() {
+
+			}
+		
+		});
+
+	});
+        
+        
+        //Handleber 작업합수
+		let print_order_product_info = function(order_product_data, target, template) {
+			let templateObj = Handlebars.compile(template.html()); // 템플릿 문법검사및 참조
+			let order_product_html = templateObj(order_product_data); 
+			target.children().remove(); // 무한반복 방지
+			target.append(order_product_html); // 주문상품정보 출력될 위치에 뿌림
+		}
+
+		// 주문금액(가격 * 수량)
+		Handlebars.registerHelper("unit_order_tot_price", function(item_price,item_amount) {
+
+			return item_price * item_amount;
+		});
+        
+      }); // ready event end
+
+    </script>
+    </th:block>
+  </body>
+</html>

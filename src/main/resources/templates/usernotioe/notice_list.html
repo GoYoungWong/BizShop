@@ -1,0 +1,142 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+
+<div class="container">
+     <h1 class="mt-3 mb-4 text-center">공지사항</h1>
+     <div class="box-body">
+						<div>
+							<form action="/admin/notice/notice_list" method="get" >
+									<select name="type">
+										<option selected>검색종류선택</option>
+										<option value="I">일련번호</option>
+										<option value="T">제목</option>
+										<option value="N">구분</option>
+									</select>
+									<input type="text" name="keyword" th:value="${pageMaker.cri.keyword}" />
+									<input type="hidden" name="pageNum" th:value="${pageMaker.cri.pageNum}" />
+									<input type="hidden" name="amount" th:value="${pageMaker.cri.amount}" />
+									<button type="submit" class="btn btn-primary">검색</button>
+							</form>
+						</div>
+						<table class="table table-bordered">
+							<tbody>
+							<tr>
+								<th style="width: 8%">일련번호</th>
+								<th style="width: 10%">분류</th>
+								<th style="width: 25%">제목</th>
+								<th style="width: 10%">작성일</th>
+								<th style="width: 10%">조회수</th>
+							</tr>
+							
+							<tr th:each="notice : ${noticelist}">
+								<td>[[${notice.idx}]]</td>
+								<td>
+									<span th:value="N" th:if="${notice.noticlass == 'N'}">공지사항</span>
+									<span th:value="Y" th:if="${notice.noticlass == 'Y'}">업데이트</span>
+									<span th:value="E" th:if="${notice.noticlass == 'E'}">이벤트</span>
+									<span th:value="H" th:if="${notice.noticlass == 'H'}">휴일관련</span>
+								</td>
+								<td><a class="move notice_title" href="#" th:text="${notice.title}"></a></td>
+								<td th:text="${#dates.format(notice.regdate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td><span th:text="${notice.readcount}"></span></td>
+							</tr>
+							
+							
+							
+							
+							</tbody></table>
+					</div>
+      
+ <div class="row" th:if="${pageMaker != null}">
+		<div class="col-md-4">
+	
+		<!--  Criteria 클래스 필드사용목적 -->
+		<!--1)페이지번호 클릭할 때 사용  [이전]  1	 2	3	4	5 [다음]  -->
+		<!--2)목록에서 상품이미지 또는 상품명 클릭할 때 사용   -->
+		  <form id="actionForm" action="" method="get">
+			<input type="hidden" name="pageNum" id="pageNum" th:value="${pageMaker.cri.pageNum}" />
+			<input type="hidden" name="amount"  id="amount" th:value="${pageMaker.cri.amount}" />
+			<input type="hidden" name="type" id="type" th:value="${pageMaker.cri.type}" />
+			<input type="hidden" name="keyword" id="keyword" th:value="${pageMaker.cri.keyword}" />
+			
+			<!-- 관리자에서는 없어도 돼었지만 사용자쪽은 2차카테고리 정보를 가지고 있어야 에러가 나지 않는다. -->
+			<input type="hidden" name="cat_code" id="cat_code" th:value="${cat_code}" />
+			<input type="hidden" name="cat_name" id="cat_name" th:value="${cat_name}" />
+			
+		  </form>
+		</div>
+		<div class="col-md-6 text-center">
+			<nav aria-label="...">
+			<ul class="pagination">
+				<!-- 이전 표시여부 -->
+				
+				<th:block th:if="${pageMaker.prev }">
+					<li class="page-item">
+						<a th:href="@{${pageMaker.startPage - 1}}" class="page-link movepage">Previous</a>
+					</li>
+				</th:block>
+				
+				<!-- https://jbground.tistory.com/40 페이지번호 출력 -->
+				<!-- 1	2	3	4	5 6	7	8	9	10  [다음] -->
+				<!-- [이전] 11	12	13	14	15 16	17	18	19	20   -->
+
+				<th:block th:with="pageMaker = ${pageMaker}">
+					<th:block th:each="num : *{#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+					<li class='page-item' th:classappend="${pageMaker.cri.pageNum ==  num ? 'active': '' }" aria-current="page">
+						<a class="page-link movepage" th:href="@{${num}}" th:text="${num}"></a>
+					</li>
+					</th:block>
+				</th:block>
+
+				<!--  다음 표시여부 -->
+				<th:block th:if="${pageMaker.next }">
+				  <li class="page-item">
+					<a th:href="@{${pageMaker.endPage + 1}}" class="page-link movepage">Next</a>
+				  </li>
+				</th:block>
+				
+			</ul>
+			</nav>
+		</div>
+
+	</div>
+	<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+
+	</th:block>
+	<!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+	<script>
+	$(document).ready(function() {
+	
+	let actionForm = $("#actionForm");
+	
+	
+	// 페이지번호 클릭시(이전  1  2	 3	4	5  다음) actionForm 을 사용한다.
+	$(".movepage").on("click", function(e) {
+		e.preventDefault(); // a태그의 href기능을 제거.
+		// 주소변경
+		actionForm.attr("action", "/usernotioe/notice_list");
+		
+		// 1)사용자가 클릭한 페이지번호 작업
+		actionForm.find("input[name='pageNum']").val($(this).attr("href"));
+	
+		actionForm.submit();
+	});
+
+	}); // ready event end
+	
+	
+	</script>
+	</th:block>
+	
+	  </body>
+	</html>

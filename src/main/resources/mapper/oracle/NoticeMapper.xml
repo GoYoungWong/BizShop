@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.admin.notioe.NoticeMapper">
+	
+	<resultMap type="NoticeVO" id="NoticeVOMap">
+		<id property="idx" column="no_idx"/>
+		<result property="title" column="no_title"/>
+		<result property="content" column="no_content"/>
+		<result property="readcount" column="no_readcount"/>
+		<result property="noticlass" column="no_class"/>
+		<result property="regdate" column="no_regdate"/>
+		<result property="adminName" column="admin_name"/> <!-- 추가된 관리자 이름 필드 -->
+	
+	</resultMap>
+
+	<!--  검색조건이 1)목록 2)총데이타 개수 공통사항 -->
+	<!-- 검색종류가 (상품명 또는 제조사 또는 내용) 선택.  "N"  "P"   "C" -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach collection="typeArr" item="type">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'I'.toString()">
+							no_idx like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'T'.toString()">
+							no_title like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'N'.toString()">
+							no_class like '%' || #{keyword} || '%'
+						</when>
+					</choose>
+				</trim>			
+			</foreach>
+		</trim>
+	</sql>
+
+	<select id="NoticeList" parameterType="Criteria" resultMap="NoticeVOMap">
+
+	SELECT
+		no_idx, no_title, no_content, no_readcount,no_class ,no_regdate
+	FROM
+		(
+		SELECT /*+ INDEX_ASC(notioe PK_NOTIOE_IDX) */
+			ROWNUM AS RN, no_idx, no_title, no_content, no_readcount,no_class ,no_regdate
+		FROM
+			notioe
+		WHERE
+		<include refid="criteria"></include>
+		<![CDATA[
+		ROWNUM <= (#{pageNum} * #{amount}) -- 페이지번호 * 페이지별 출력건수
+		]]>
+		
+		)
+		WHERE
+			RN > (#{pageNum} - 1) * #{amount} -- (페이지번호 -1) * 페이지별 출력건수
+</select>
+
+<select id="getNoticeCount" resultType="int">
+
+	SELECT
+		COUNT(*)
+	FROM
+		notioe
+	WHERE
+		<include refid="criteria"></include>
+	1=1
+
+</select>
+
+<insert id="insert_notice" parameterType="NoticeVO">
+	
+	INSERT INTO
+		notioe(no_idx, no_title, no_content,no_readcount,no_class)
+	VALUES
+		(
+			SEQ_NOTIOE_IDX.NEXTVAL,
+			#{title},
+			#{content},
+			#{readcount}, 
+            #{noticlass}
+           
+        )
+</insert>
+
+<select id="getNoticeinfo" parameterType="Integer" resultMap="NoticeVOMap">
+		
+		SELECT 
+			no_title, no_content, no_class
+		FROM
+			notioe
+		WHERE
+			no_idx = #{idx}
+
+</select>
+
+<update id="update_notice" parameterType="NoticeVO">
+	
+	UPDATE 
+		notioe
+	SET
+		no_title = #{title}, 
+		no_content = #{content}, 
+		no_class = #{noticlass},
+		no_regdate = sysdate
+	WHERE
+		no_idx = #{idx}
+
+
+
+</update>
+
+</mapper>

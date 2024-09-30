@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.user.UserMapper">
+
+<!-- parameterType: 매개변수에 파라미터타입 -->  <!-- resultType: 리턴타입 -->
+<select id="idCheck" parameterType="String" resultType="String">
+
+	SELECT 
+		user_id 
+	FROM 
+		user_tbl 
+	WHERE 
+		user_id = #{user_id}
+
+</select>
+
+<insert id="join" parameterType="com.docmall.basic.user.UserVo">
+
+	INSERT INTO 
+		user_tbl(user_id, user_pwd, user_name, user_email, user_zipcode, user_addr, user_deaddr, user_phone) 
+	VALUES
+		(#{user_id}, #{user_pwd}, #{user_name}, #{user_email}, #{user_zipcode}, #{user_addr}, #{user_deaddr}, #{user_phone}) <!-- getter 매서드가 작동됨 -->
+
+</insert>
+
+<select id="login" resultType="UserVo" parameterType="String">
+
+	SELECT
+		user_id, user_pwd, user_name, user_email, user_zipcode, user_addr, user_deaddr, user_phone,user_datesub, user_update
+	FROM
+		user_tbl
+	WHERE
+		user_id = #{user_id}
+
+</select>
+
+<select id="idfind" resultType="String" parameterType="map">
+	
+	SELECT 
+		user_id
+	FROM
+		user_tbl
+	WHERE
+	 	user_name = #{user_name}
+	AND
+		user_email = #{user_email}	
+
+</select>
+
+<select id="pwfind" resultType="String" parameterType="map">
+	SELECT
+		user_email
+	FROM
+		user_tbl
+	WHERE
+		user_id = #{user_id}
+	AND
+		user_name = #{user_name}
+	AND
+		user_email = #{user_email}
+
+</select>
+
+<update id="tempPwUpdate" parameterType="map">
+
+	UPDATE
+		user_tbl
+	SET
+		user_pwd = #{temp_enc_pw}
+	WHERE
+		user_id = #{user_id}
+
+</update>
+
+<delete id="delete" parameterType="String">
+
+DELETE FROM
+	user_tbl
+WHERE
+	user_id = #{user_id}
+
+</delete>
+
+<update id="modify" parameterType="UserVo">
+	
+	UPDATE
+		user_tbl
+	SET
+		user_email = #{user_email}, user_zipcode = #{user_zipcode}, user_addr = #{user_addr}, user_deaddr = #{user_deaddr}, user_phone = #{user_phone}
+	WHERE
+		user_id = #{user_id}
+
+</update>
+
+<update id="changePw" parameterType="String">
+
+	UPDATE
+	 	user_tbl
+	SET
+		user_pwd = #{new_user_pwd}
+	WHERE
+		user_id = #{user_id}
+
+
+
+
+</update>
+
+<select id="existsUserInfo" resultType="String">
+	
+		SELECT 
+			sns_login_type
+		FROM
+			user_tbl
+		WHERE
+			user_email = #{sns_email}
+	
+	
+	</select>
+	
+	<!-- SNS 카카오, 네이버 사용자 중복체크 -->
+	<select id="sns_user_check" parameterType="String" resultType="String">
+	
+		SELECT
+			email
+		FROM
+			sns_user_tbl
+		WHERE
+			email = #{sns_email}
+	
+	</select>
+	
+	<insert id="sns_user_insert" parameterType="com.docmall.basic.user.SNSUserDto">
+	
+		INSERT INTO
+			sns_user_tbl(id, name, email, sns_type)
+		VALUES
+			(#{id}, #{name}, #{email}, #{sns_type})
+			
+	</insert>
+	
+	<select id="userqnalist" parameterType="map"  resultType="QnaBoardVO">
+	
+		SELECT 
+			qna_idx, pro_num, user_id, que_title, que_content, ans_title, ans_content, anscheck, pro_up_folder, pro_img, question_date, answer_date
+		FROM (																		<!-- 인라인뷰 -->
+		    	SELECT /*+ INDEX_DESC(qnaboard_tbl PK_QNA_IDX)  */ 
+		        	ROWNUM AS RN, qna_idx, pro_num, user_id, que_title, que_content, ans_title, ans_content, anscheck, pro_up_folder, pro_img, question_date, answer_date
+		    	FROM
+		        	qnaboard_tbl
+		    	WHERE
+		    		user_id = #{user_id}
+		    	AND
+  		
+		 <![CDATA[  		
+		   		ROWNUM <= (#{cri.pageNum} * #{cri.amount})   -- 페이지번호 * 페이지별 출력건수
+		 ]]>  		
+		)
+		WHERE 
+			RN > (#{cri.pageNum} - 1 ) * #{cri.amount}
+	
+	</select>
+	
+	<select id="getCountQnaByUserId" parameterType="String" resultType="int">
+	
+		SELECT 
+			COUNT(*)
+		FROM
+			qnaboard_tbl
+		WHERE
+			user_id = #{user_id}
+	
+	
+	</select>
+
+	<select id="myqna_form" parameterType="Long" resultType="QnaBoardVO">
+	
+		SELECT 
+			qna_idx, pro_num, user_id, que_title, que_content, ans_title, ans_content, pro_up_folder, pro_img, question_date, answer_date
+		FROM
+			qnaboard_tbl
+		WHERE
+			qna_idx = #{qna_idx}
+
+	</select>
+
+
+</mapper>

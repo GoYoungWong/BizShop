@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="headerfragment">
+ <nav class="navbar navbar-expand-md navbar-dark bg-dark"> <!-- fixed-top -->
+    <h5 class="my-0 ml-auto mr-4 font-weight-normal"><a class="navbar-brand" th:href="@{/}">BizShop</a></h5>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="ml-auto d-flex">  
+          <a class="nav-link text-light" th:href="@{/usernotioe/notice_list}">공지사항</a>
+          <th:block th:if="${session.login_status == null and session.kakao_status == null}">
+          <a class="nav-link text-light" th:href="@{/user/login}">로그인</a>
+          <a class="nav-link text-light" th:href="@{/user/join}">회원가입</a>
+          </th:block>
+          
+          <a class="nav-link text-light" th:href="@{/user/mypages}">내정보</a>
+          <a class="nav-link text-light" th:href="@{/cart/cart_list}">장바구니</a>
+          
+          
+          <th:block th:if="${session.login_status != null}">
+          <a class="nav-link text-light" th:href="@{/orderinquiry/order_list}">주문상품조회</a>
+          <a class="nav-link text-light" th:href="@{/user/logout}">로그아웃</a>
+          </th:block>
+          <th:block th:if="${session.kakao_status != null}">
+          <a class="nav-link text-light" th:href="@{/orderinquiry/order_list}">주문상품조회</a>
+          <a class="nav-link text-light" th:href="@{/oauth2/kakaologout}">로그아웃</a>
+          </th:block>
+         </div> 
+    </div>
+    </nav>
+    
+    
+</div>
+
+  
+ 
+</html>

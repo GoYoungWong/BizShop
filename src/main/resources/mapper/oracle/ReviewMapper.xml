@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.review.ReviewMapper">
+
+	<select id="rev_list" parameterType="map"  resultType="ReviewVO">
+	
+		SELECT 
+			rev_code, user_id, pro_num, rev_content, rev_title,pro_up_folder, pro_img ,rev_rate, rev_date
+		FROM (																		<!-- 인라인뷰 -->
+		    	SELECT /*+ INDEX_DESC(review_tbl PK_REVIEW_CODE)  */ 
+		        	ROWNUM AS RN, rev_code, user_id, pro_num, rev_content, rev_title,pro_up_folder, pro_img ,rev_rate, rev_date
+		    	FROM
+		        	review_tbl
+		    	WHERE
+		    		pro_num = #{pro_num}
+		    	AND
+  				 
+		 <![CDATA[  		
+		   		ROWNUM <= (#{cri.pageNum} * #{cri.amount})   -- 페이지번호 * 페이지별 출력건수
+		 ]]>  		
+		)
+		WHERE 
+			RN > (#{cri.pageNum} - 1 ) * #{cri.amount}
+	
+	</select>
+
+	<select id="getCountReviewBypro_num" parameterType="Integer" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			review_tbl
+		
+		WHERE
+			pro_num = #{pro_num}
+	
+	</select>
+	
+	<insert id="review_save" parameterType="ReviewVO">
+	
+		INSERT INTO
+			review_tbl(rev_code, user_id, pro_num, rev_content, rev_title, rev_rate,pro_up_folder, pro_img)
+		VALUES
+			(SEQ_REVIEW_CODE.NEXTVAL, #{user_id}, #{pro_num}, #{rev_content}, #{rev_title}, #{rev_rate}, #{pro_up_folder},#{pro_img} )
+	
+	</insert>
+	
+	
+	
+	
+	<delete id="review_delete" parameterType="Integer">
+		DELETE FROM
+			review_tbl
+		WHERE
+			rev_code = #{rev_code}
+	
+	</delete>
+
+	<select id="rev_modify" parameterType="Integer" resultType="ReviewVO">
+		
+		SELECT
+			rev_code, user_id, pro_num, rev_content, rev_title,pro_up_folder, pro_img ,rev_rate, rev_date
+		FROM
+			review_tbl
+		WHERE
+			rev_code = #{rev_code}
+	</select>
+	
+	<update id="updat_rev" parameterType="ReviewVO">
+	
+		UPDATE 
+			review_tbl
+		SET
+			rev_content = #{rev_content}, rev_title = #{rev_title},pro_up_folder = #{pro_up_folder}, pro_img = #{pro_img} ,rev_rate = #{rev_rate}, rev_date = SYSDATE
+		WHERE
+			rev_code = #{rev_code}
+	
+	
+	</update>
+
+
+
+</mapper>

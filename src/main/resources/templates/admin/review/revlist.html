@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{admin/layout/adminlayout}">
+  
+  <!--
+  BODY TAG OPTIONS:
+  =================
+  Apply one or more of the following classes to get the
+  desired effect
+  |---------------------------------------------------------|
+  | SKINS         | skin-blue                               |
+  |               | skin-black                              |
+  |               | skin-purple                             |
+  |               | skin-yellow                             |
+  |               | skin-red                                |
+  |               | skin-green                              |
+  |---------------------------------------------------------|
+  |LAYOUT OPTIONS | fixed                                   |
+  |               | layout-boxed                            |
+  |               | layout-top-nav                          |
+  |               | sidebar-collapse                        |
+  |               | sidebar-mini                            |
+  |---------------------------------------------------------|
+  -->
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+      <!-- Main Header -->
+      
+      <!-- Left side column. contains the logo and sidebar -->
+      
+	<th:block layout:fragment="content">
+	<!-- 1) Include Handlebars from a CDN 사용목적 -->
+	<script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script> <!--Handlebars사용이유: 단순이 화면에 보여주기위해 사용 -->
+   
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            주문리스트
+            <small>주문리스트 메뉴입니다.</small>
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="/admin/admin_menu"><i class="fa fa-dashboard"></i>메인페이지</a></li>
+            <li class="active">주문관리</li>
+            <li class="active">주문리스트</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+
+          <!-- Your Page Content Here -->
+          <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <!-- list start -->
+                <div class="row">
+    		<div class="col-md-12">
+    			<div class="box">
+					<div class="box-header with-border">
+					<h3 class="box-title">Order List</h3>
+					</div>
+
+					<div class="box-body">
+						<div>
+							<form action="/admin/review/reviewlist" method="get" >
+									<select name="type">
+										<option selected th:selected="${''} == ${pageMaker.cri.type}">검색종류선택</option>
+										<option value="N" th:selected="${'U'} == ${pageMaker.cri.type}">아이디</option>
+										<option value="U" th:selected="${'P'} == ${pageMaker.cri.type}">상품번호</option>
+										<option value="NO" th:selected="${'UP'} == ${pageMaker.cri.type}">아이디 or 상품번호</option>
+									</select>
+									<input type="text" name="keyword" th:value="${pageMaker.cri.keyword}">
+									<input type="hidden" name="pageNum" th:value="${pageMaker.cri.pageNum}">
+									<input type="hidden" name="amount" th:value="${pageMaker.cri.amount}">
+							</form>
+						</div>
+						<table class="table table-bordered">
+							<tbody><tr>
+								<th style="width: 8%">리뷰번호</th>
+								<th style="width: 10%">상품이미지</th>
+								<th style="width: 25%">제목</th>
+								<th style="width: 10%">내용</th>
+								<th style="width: 20%">평점</th>
+								<th style="width: 10%">작성자</th>
+								<th style="width: 10%">등록일</th>
+								<th style="width: 10%">비고</th>
+							</tr>
+							
+							<tr th:each="review : ${revlist}">
+								<td><span th:text="${review.rev_code }"></span></td>
+								<td>
+              					<img th:src="${'/review/image_display?dateFolderName=' + product.pro_up_folder + '&fileName=s_' + product.pro_img}" style="width: 80%;height: 80px;">
+            					</td>
+								<td><span th:text="${review.rev_title }"></span></td>
+								<td><span th:text="${review.rev_content }"></span></td>
+								<td><span th:text="${review.rev_rate}"></span></td>
+								<td>
+									<span th:text="${review.user_id}"></span>
+								</td>
+								<td th:text="${#dates.format(review.rev_date, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td><button type="button" class="btn btn-primary" name="btn_order_info" th:data-rev_code="${review.rev_code}">삭제</button></td>
+							</tr>
+							
+							
+							
+							
+							</tbody></table>
+					</div>
+					<div class="box-footer clearfix">
+						<div class="row">
+							<div class="col-md-4">
+							<!--1)페이지번호 클릭할 때 사용  [이전]  1	2	3	4	5 [다음]  -->
+							<!--2)목록에서 상품이미지 또는 상품명 클릭할 때 사용   -->
+							  <form id="actionForm" action="" method="get">
+								<input type="hidden" name="pageNum" id="pageNum" th:value="${pageMaker.cri.pageNum}" />
+								<input type="hidden" name="amount"  id="amount" th:value="${pageMaker.cri.amount}" />
+								<input type="hidden" name="type" id="type" th:value="${pageMaker.cri.type}" />
+								<input type="hidden" name="keyword" id="keyword" th:value="${pageMaker.cri.keyword}" />
+								
+							  </form>
+							</div>
+							<div class="col-md-6 text-center">
+								<nav aria-label="...">
+								<ul class="pagination">
+									<!-- 이전 표시여부 -->
+									
+									<th:block th:if="${pageMaker.prev }">
+										<li class="page-item">
+											<a th:href="${pageMaker.startPage - 1 }" class="page-link movepage">이전</a>
+										</li>
+									</th:block>
+									
+									<!-- https://jbground.tistory.com/40 페이지번호 출력 -->
+									<!-- 1	2	3	4	5 6	7	8	9	10  [다음] -->
+									<!-- [이전] 11	12	13	14	15 16	17	18	19	20   -->
+
+									<th:block th:with="pageMaker = ${pageMaker}">
+										<th:block th:each="num : *{#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+										<li class='page-item' th:classappend="${pageMaker.cri.pageNum ==  num ? 'active': '' }" aria-current="page">
+											<a class="page-link movepage" th:href="${num }" th:text="${num }"></a>
+										</li>
+										</th:block>
+									</th:block>
+
+									<!--  다음 표시여부 -->
+									<th:block th:if="${pageMaker.next }">
+									  <li class="page-item">
+										<a th:href="${pageMaker.endPage + 1 }" class="page-link movepage">다음</a>
+									  </li>
+									</th:block>
+									
+								</ul>
+								</nav>
+							</div>
+						</div>
+						
+					</div>
+			   </div>
+    		</div>
+    	</div>
+              </div>
+          	</div>
+          </div>
+          
+
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+      
+<!-- Modal -->
+<div class="modal fade" id="order_ditail_info" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+	  <div class="modal-dialog modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h3 class="modal-title" id="staticBackdropLabel2"><b>상세정보</b></h3>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="closeButton">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+		  </div>
+		  <!-- load()매서드를 이용하여, pro_info_2.html파일이 실행돈 내용이 삽입된다. -->
+		<div class="model-Body" id="order_info">
+
+		<!-- 주문상품정보 -->		
+		<div id="order_product_info">
+		
+		
+		</div>
+		</div>
+ 	  </div>
+   </div>
+</div>	
+      
+    </th:block>
+
+      <!-- Main Footer -->
+      
+
+      <!-- Control Sidebar -->
+      
+    
+
+    <!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+    <script>
+
+      $(document).ready(function() {
+        
+        let actionForm = $("#actionForm");
+		let order_num; // 전역변수 뺌
+        
+		// 페이지번호 클릭시(이전  1  2  3  4  5  다음) actionForm 을 사용한다.
+        $(".movepage").on("click", function(e) {
+			e.preventDefault();   // a태그의 href기능 제거
+			// 주소변경
+			actionForm.attr("action", "/admin/review/review_list"); // <form id="actionForm" action="" method="get"> action주소를 변경
+        	// 클릭한 페이지번호 작업
+        	// pageNum이라는 이름의 숨겨진 입력 필드를 찾아서, 클릭된 페이지 번호 링크의 href 속성 값을 해당 입력 필드에 설정
+        	actionForm.find("input[name='pageNum']").val($(this).attr("href")); // $(this): 현재클릭한 태그를 가르킴
+        	
+        	// 전송
+			actionForm.submit();
+        
+        });
+        
+        
+        
+      }); // ready event end
+
+    </script>
+    </th:block>
+  </body>
+</html>

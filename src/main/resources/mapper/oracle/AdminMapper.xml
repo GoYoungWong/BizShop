@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.admin.AdminMapper">
+
+<insert id="Admin_join" parameterType="com.docmall.basic.admin.AdminVO">
+
+	INSERT INTO
+		master_tbl(admin_id, admin_pw, admin_name, admin_email, admin_phone)
+	VALUES
+		(#{admin_id}, #{admin_pw}, #{admin_name}, #{admin_email}, #{admin_phone})
+
+
+</insert>
+
+<select id="adminlogin" resultType="AdminVO" parameterType="String">
+
+	SELECT 
+		admin_id, admin_pw, admin_name, admin_email, admin_phone, admin_updatedate
+	FROM
+		master_tbl
+	WHERE
+		admin_id = #{admin_id}
+
+</select>
+
+ 
+</mapper>

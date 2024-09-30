@@ -1,0 +1,104 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container">
+    <h1 class="mt-3 mb-4 text-center"><b>아이디 찾기</b></h1>
+    <div class="row">
+        <div class="col">
+            <div class="card card-info">
+                <div class="card-header">
+                <h3 class="card-title"></h3>
+            </div>
+             <form class="form-horizontal" id="idfindForm" th:action="@{/user/idfind}" method="post">
+             <div class="card-body">
+                 <div class="form-group row">
+                     <label for="user_name" class="col-sm-4 col-form-label">이름</label>
+                     <div class="col-sm-8">
+                         <input type="text" class="form-control" id="user_name" name="user_name" placeholder="이름을 입력하세요." value="홍길동">
+                     </div>
+                 </div>
+                 <div class="form-group row">
+                     <label for="user_email" class="col-sm-4 col-form-label">이메일</label>
+                     <div class="col-sm-6">
+                         <input type="text" class="form-control" id="user_email" name="user_email" placeholder="이메일을 입력하세요." value="soondool1007@gmail.com">
+                     </div>
+                     <div class="col-sm-2">
+                     <button type="button" class="btn btn-link" id="btnMailAuthcode">인증번호발송</button>
+                     </div>
+                 </div>
+                 <div class="form-group row">
+                     <label for="authcode" class="col-sm-4 col-form-label">인증코드</label>
+                     <div class="col-sm-8">
+                         <input type="text" class="form-control" id="authcode" name="authcode" placeholder="authcode">
+                     </div>
+                 </div>   
+             </div>
+             
+             <div class="card-footer text-center">
+             <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnid"><b>아이디찾기</b></button>
+         </div>
+       </form>
+     </div>
+   </div>
+</div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+
+</main>
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+
+ // 입력한 아이디와 비밀번호가 다르면 나오는 안내문
+ let msg = [[${msg}]];  // '${msg}' "failPW" or "failID"
+ if(msg == "failID") {
+     alert("이름과메일정보를 확인해주세요.");
+     document.getElementById("user_name").focus();
+ }else if(msg == "failAuthCode") {
+     alert("인증코드를 확인해주세요.");
+     document.getElementById("authcode").focus();
+ }
+
+
+ $(document).ready(function() {
+		
+ 	// 메일인증코드요청
+   $("#btnMailAuthcode").on("click", function() {
+         
+         if($("#user_email").val() == "") {
+             alert("메일을 입력하세요.");
+             $("#user_email").focus();
+             return;
+         }
+
+         $.ajax({
+             url: '/email/authcode',
+             type: 'get',                                                   // type적은 이유는 EmailController에 있는 String type과 일치 하기 위해
+             data: {receiverMail : $("#user_email").val(), type : "emailID"},  // EmailDTO dto로 받을 데이터
+             dataType: 'text', // success의 리턴타입이 String이기 때문에 text사용
+             success: function(result) {
+                 if(result == "success") {  // Controller에 success에서 넘어온다.
+                     alert("메일로 인증코드가 발급되었습니다.")
+                 }
+             }
+         });
+     });
+     
+ }); // ready event end
+
+</script>
+ </th:block>
+  </body>
+</html>

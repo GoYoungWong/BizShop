@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.orderinquiry.OrderInquiryMapper">
+
+	
+	<!-- 날짜 검색 -->
+	<sql id="search_date">
+		<if test="start_date != null and !start_date.equals('') and end_date != null and !end_date.equals('')">
+			<![CDATA[
+				order_redate >= to_date(#{start_date}) AND order_redate < to_date(#{end_date}) + 1 AND
+			]]>		
+		</if>
+	</sql>
+
+<select id="order_list" parameterType="map" resultType="OrderVO">
+   
+   		SELECT
+			order_num, user_id, order_name, order_zipcode, order_addr, order_deaddr, order_pho, order_price, order_req, order_redate,order_status
+		FROM
+			(
+			   SELECT /*+ INDEX_DESC(order_num_tbl SEQ_ORDER_NUM) */
+					ROWNUM AS RN, order_num, user_id, order_name, order_zipcode, order_addr, order_deaddr, order_pho, order_price, order_req, order_redate,order_status
+			   FROM
+			   	   order_num_tbl
+			   WHERE
+				  <include refid="search_date"></include>	   
+			
+		<![CDATA[
+			ROWNUM <= (#{cri.pageNum} * #{cri.amount})
+		]]>	
+		)
+		WHERE
+			RN > (#{cri.pageNum} - 1) * #{cri.amount}
+   	
+   </select>
+   
+   <!--  공통사항 : 검색조건추가 -->
+	<select id="getTotalCount" resultType="int" parameterType="map">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			order_num_tbl
+		
+		WHERE
+			<include refid="search_date"></include>
+			order_num > 0
+	</select>
+	
+	<select id="order_info" parameterType="Long" resultType="OrderVO">
+	
+		SELECT 
+			order_num, user_id, order_name, order_zipcode, order_addr, order_deaddr, order_pho, order_price, order_req, order_redate
+		FROM
+			order_num_tbl
+		WHERE
+			order_num = #{order_num}
+	</select>
+
+	<select id="order_user_info" parameterType="Long" resultType="OrderInQuiryVO">
+		
+		SELECT 
+			odt.order_num, odt.pro_num, odt.item_amount,odt.item_price ,p.pro_name,p.pro_up_folder, p.pro_img 
+		FROM
+			order_det_tbl odt
+		INNER JOIN
+			product_tbl p
+		ON
+			odt.pro_num = p.pro_num
+		WHERE
+			odt.order_num = #{order_num}
+	
+	</select>
+
+</mapper>

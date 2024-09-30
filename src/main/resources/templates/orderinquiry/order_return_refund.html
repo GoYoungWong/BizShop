@@ -1,0 +1,70 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container-fluid">
+    <h1 class="mt-3 mb-4 text-center">반품/환불신청</h1>
+    <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <div class="box-header with-border">
+                </div><!-- /.box-header -->
+                <!-- form start -->				<!-- 파일업로드 할떄만 enctype="multipart/form-data" -->
+                <form action="/admin/members/memsendmail"  method="post" class="form-horizontal" id="mailinfofrom" name="mailinfofrom">
+                  <div class="box-body">
+                    	<div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">제목</label>
+			              <div class="col-sm-5">
+			                <input type="text" class="form-control" name="mtitle" id="mtitle" placeholder="메일제목 입력..." >
+			              </div>
+						</div>
+						<div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">반품/환불사유</label>
+			              <div class="col-sm-10">
+			                <textarea class="form-control" name="mcontent" id="mcontent" rows="6" style="width: 860px;"></textarea>
+			              </div>
+			            </div>
+                  </div><!-- /.box-body -->
+                  <div class="box-footer text-center">
+                    <button type="button" id="btn_mail_save" class="btn btn-primary">반품/환불 신청</button>
+                    <button type="button" id="btn_mail_list" class="btn btn-primary">홈</button>
+                  </div><!-- /.box-footer -->
+                </form>
+              </div>
+          	</div>
+          </div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+</main>
+
+
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+	
+ 	
+ 
+ 	$(document).ready(function() {   // ready event start
+		
+ 		
+	
+	 }); // ready event end
+
+	
+ 
+
+</script>
+ </th:block>
+  </body>
+</html>

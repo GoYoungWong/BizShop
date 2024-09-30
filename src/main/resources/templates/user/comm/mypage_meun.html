@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+	<h2>마이페이지</h2>
+   	 
+   	 <div>
+        <a class="dropdown-item" th:href="@{/user/mypages}">내 정보</a>
+        <a class="dropdown-item"  th:href="@{/user/changepw}">비밀번호 변경</a>
+        <a class="dropdown-item"  th:href="@{/user/delete}">회원 탈퇴</a>
+        <a class="dropdown-item"  th:href="@{/user/myqna}">내 QnA</a>
+     </div>
+	 
+</html>

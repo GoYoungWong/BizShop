@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.admincategory.AdminCategoryMapper">
+
+<select id="getFirstCategoryList" resultType="com.docmall.basic.admincategory.AdminCategoryVO">
+
+	SELECT 
+		cat_code, cat_prtcode, cat_name
+	FROM
+		category_tbl
+	WHERE
+		cat_prtcode IS NULL <!-- cat_prtcode 컬럼이 null인 행들만 조회. 즉 최상위 카테고리만 조회한다는 뜻 -->
+
+
+</select>	
+
+<select id="getSecondCategoryList" resultType="com.docmall.basic.admincategory.AdminCategoryVO">
+
+	SELECT 
+		cat_code, cat_prtcode, cat_name
+	FROM
+		category_tbl
+	WHERE
+		cat_prtcode = #{cat_prtcode}
+
+
+</select>	
+
+
+<select id="getFristCategoryBySecondCategory" resultType="AdminCategoryVO" parameterType="int">
+
+	SELECT 
+		cat_code, cat_prtcode, cat_name
+	FROM
+		category_tbl
+	WHERE
+		cat_code = #{cat_code}
+
+
+</select>	
+
+
+
+</mapper>

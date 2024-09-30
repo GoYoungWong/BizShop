@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.qnaboard.QnaBoardMapper">
+
+	<!--  검색조건이 1)목록 2)총데이타 개수 공통사항 -->
+	<!-- 검색종류가 (상품명 또는 제조사 또는 내용) 선택.  "N"  "P"   "C" -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach collection="typeArr" item="type">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							que_title like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'I'.toString()">
+							user_id like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'P'.toString()">
+							pro_num like '%' || #{keyword} || '%'
+						</when>
+					</choose>
+				</trim>			
+			</foreach>
+		</trim>
+	</sql>
+
+
+
+	<select id="qnalist" parameterType="map"  resultType="QnaBoardVO">
+	
+		SELECT 
+			qna_idx, pro_num ,user_id,que_title ,que_content, ans_title, anscheck, pro_up_folder, pro_img, question_date, answer_date
+		FROM (																		<!-- 인라인뷰 -->
+		    	SELECT /*+ INDEX_DESC(qnaboard_tbl PK_QNA_IDX)  */ 
+		        	ROWNUM AS RN, qna_idx, pro_num ,user_id,que_title ,que_content, ans_title, anscheck, pro_up_folder, pro_img, question_date, answer_date
+		    	FROM
+		        	qnaboard_tbl
+		    	WHERE
+		    		pro_num = #{pro_num}
+		    	AND
+  		
+		 <![CDATA[  		
+		   		ROWNUM <= (#{cri.pageNum} * #{cri.amount})   -- 페이지번호 * 페이지별 출력건수
+		 ]]>  		
+		)
+		WHERE 
+			RN > (#{cri.pageNum} - 1 ) * #{cri.amount}
+	
+	</select>
+
+	<select id="getCountQnaBypro_num" parameterType="Integer" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			qnaboard_tbl
+		
+		WHERE
+			pro_num = #{pro_num}
+	
+	</select>
+	
+	<insert id="qna_save" parameterType="QnaBoardVO">
+	
+		INSERT INTO
+			qnaboard_tbl(qna_idx, pro_num, user_id,que_title ,que_content, pro_up_folder, pro_img)
+		VALUES
+			(SEQ_QNABOARD_CODE.NEXTVAL, #{pro_num}, #{user_id}, #{que_title}, #{que_content}, #{pro_up_folder}, #{pro_img})
+		
+	
+	
+	</insert>
+	
+	
+	
+	
+	
+
+</mapper>

@@ -1,0 +1,97 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container">
+    <h1 class="mt-3 mb-4 text-center">비밀번호 변경</h1>
+    <div class="row">
+	    <div class="col-4">
+	        <section th:replace="~{/user/comm/mypage_meun}">
+	    	</section>
+	    </div>
+	    <div class="col-8">
+	        <form class="form-horizontal" id="changePWForm" th:action="@{/user/changepw}" method="post">
+	            <div class="card-body">
+	                <div class="card-header">
+	                <div class="form-group row">  
+                        <label for="now_user_pwd" class="col-sm-2 col-form-label">현재 비밀번호입력</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="now_user_pwd" name="now_user_pwd" >
+                        </div>
+	                </div>
+	                
+	                <div class="form-group row">  
+                        <label for="new_user_pwd" class="col-sm-2 col-form-label">신규 비밀번호입력</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="new_user_pwd" name="new_user_pwd" >
+                        </div>
+	                </div>
+	                
+	                <div class="form-group row">  
+                        <label for="neew_user_pwd" class="col-sm-2 col-form-label">비밀번호 확인</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="neew_user_pwd" name="neew_user_pwd" >
+                        </div>
+	                </div>
+	              </div>   
+	            	
+	                <!-- id="btnJoin"   -->
+	                <button type="button" class="btn btn-secondary btn-lg btn-block" id="btnnewpassword">비밀번호 변경</button> <!--type에 submit(전송기능있음) 이거나 button(전송기능없음) 이거나 하면 코드가 달라짐-->
+	                </div>
+	                
+	            </form>
+	    </div>
+	</div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+</main>
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+	
+ 	let msg = [[${msg}]];
+ 	if(msg == "success") {
+		alert("비밀번호가 변경되었습니다.");
+ 	}else if(msg == "gailPW") {
+		alert("현재비밀번호가 다릅니다.");
+ 	}
+ 
+ 	$(document).ready(function() {   // ready event start
+			     
+	    $("#btnnewpassword").on("click", function() {
+			if($("#now_user_pwd") == "") {
+			alert("현재 비밀번호를 입력하세요.");
+			$("#now_user_pwd").focsu();
+			return;
+		}
+			
+		if($("#new_user_pwd").val() != $("#neew_user_pwd").val()) {
+			alert("신규 비밀번호가 일치하지 않습니다.");
+			$("neew_user_pwd").focus();
+			$("neew_user_pwd").val("");
+			return;
+		}
+		
+			$("#changePWForm").submit();
+			alert("비밀번호가 변경되었습니다.");
+					
+	    });
+	
+	 }); // ready event end
+
+
+</script>
+ </th:block>
+  </body>
+</html>

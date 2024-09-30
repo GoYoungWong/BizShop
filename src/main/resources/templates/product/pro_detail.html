@@ -1,0 +1,868 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+
+<th:block layout:fragment="css">
+	<style>
+		#pro_info ul {
+		  display: flex;
+		  justify-content: center;
+		  padding: 0;
+		}
+		#pro_info ul li {
+		  list-style: none;
+		}
+		/* 별평점 기본선택지 */
+		p#star_rev_rate a.rev_rate {
+			font-size: 22px;
+			text-decoration:none;
+			color: lightgray;
+		}		
+
+		/* 별평점에 마우스 오버했을 경우 선택자 */
+		/* .on 옆에있는건 없어도 상관없다. */
+		p#star_rev_rate a.rev_rate.on {
+			color: red;
+		}
+		
+		.table td,
+    .table th {
+        /* 테이블 셀에 기본 padding과 border 설정 */
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .table .title-cell,
+    .table .content-cell {
+        /* 제목과 내용 셀의 최대 너비와 넘치는 내용 처리 */
+        max-width: 200px; /* 원하는 최대 너비 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+		
+	  </style>
+	<!-- 각 페이지의 css -->
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+	<!-- 1) Include Handlebars from a CDN 사용목적 -->
+	<script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script> <!--Handlebars사용이유: 단순이 화면에 보여주기위해 사용 -->
+
+	<script id="review-template" type="text/x-handlebars-template">
+	<table id="revtable" class="table">
+		<thead class="thead-dark">
+		  <tr>
+			<th scope="col">번호</th>
+			<th scope="col">상품이미지</th>
+			<th scope="col">제목</th>
+			<th scope="col">내용</th>
+			<th scope="col">평점</th>
+			<th scope="col">작성자</th>
+			<th scope="col">등록일</th>
+			<th scope="col">비고</th>
+		  </tr>
+		</thead>
+		<tbody>
+		{{#each .}}
+		  <tr>
+			<th scope="row">{{rev_code}}</th>
+			<td>
+              <img src="/review/image_display?dateFolderName={{pro_up_folder}}&fileName={{pro_img}}" alt="상품 이미지" style="width: 80px;height: 80px;">
+            </td>
+			<td>{{rev_title}}</td>
+			<td>{{rev_content}}</td>
+			<td>{{displayStar rev_rate}}</td>
+			<td>{{user_id}}</td>
+			<td>{{convertDate rev_date}}</td>
+			<td>{{authContorlview user_id rev_code}}</td>
+		  </tr>
+		  {{/each}}
+		</tbody>
+	  </table>
+
+	</script>
+	<script id="qna-template" type="text/x-handlebars-template">
+		<table id="" class="table">
+			<thead class="thead-dark">
+			  <tr class="title-cell">
+				<th scope="col">글번호</th>
+				<th scope="col">상품번호</th>
+				<th scope="col">상품이미지</th>
+				<th scope="col">아이디</th>
+				<th scope="col">제목</th>
+				<th scope="col">질문</th>
+				<th scope="col">답변여부</th>
+				<th scope="col">질문날짜</th>
+				<th scope="col">답변날짜</th>
+			  </tr>
+			</thead>
+			<tbody>
+			{{#each .}}
+			  <tr>
+				<th scope="row">{{qna_idx}}</th>
+				<th scope="row">{{pro_num}}</th>
+				<td>
+                    <img src="/qnaboard/image_display?dateFolderName={{pro_up_folder}}&fileName={{pro_img}}" alt="상품 이미지" style="width: 80px;height: 80px;">
+                </td>
+				<td>{{user_id}}</td>
+				<td class="title-cell">{{que_title}}</td>
+				<td class="content-cell">
+                    {{que_content}}
+                </td>
+				<td>{{#if (eq anscheck "Y")}}답변<br>완료{{else}}답변<br>대기{{/if}}</td>
+				<td>{{conqnatDate question_date}}</td>
+				<td>
+					{{#if answer_date}}
+                    	{{conqnatDate answer_date}}
+                	{{else}}
+                    	답변<br>대기
+                	{{/if}}
+				</td>
+			  </tr>
+			  {{/each}}
+			</tbody>
+		  </table>
+	
+		</script>
+</th:block>
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+  <h3 class="display-6" th:utext="${cat_name}"></h3>
+</div>
+<div class="container">
+      <div class="row mb-5">
+        <div class="col-6">
+			<img th:src="${'/product/image_display?dateFolderName=' + product.pro_up_folder + '&fileName=' + product.pro_img}" style="width: 100%;height: 500px;">
+        </div>
+        <div class="col-6">
+          	<form>
+		<div class="form-group">
+			<span id="info_pro_name" th:text="${product.pro_name}" class="font-weight-bold display-4"></span>
+		</div>
+		<hr>
+		<div class="form-group">
+			<small>(review : 0)</small>		
+		</div>
+		<hr>
+		<div class="form-group">
+	    	<label for="pro_price" id="pro_price">판매가격: </label><span th:text="${#numbers.formatInteger(product.pro_price, 3, 'COMMA') + '원'}" class="font-weight-bold "></span>
+		</div>
+	    <div class="form-group">
+	    	<label for="pro_publisher" id="pro_publisher">제조사: </label><span th:text="${product.pro_publisher}" class="font-weight-bold "></span>
+		</div>
+		<div class="form-group">
+			<small>배송비결제:</small><span><b>주문시 결제</b></span>		
+		</div>
+		
+	    <hr>
+	    <div class="form-group">
+			<label class="font-weight-bold">수량</label>
+			<input type="number" class="form-control" value="1" id="btn_cart_amount">
+	    </div>
+	    <div class="form-group">
+			<button type="button" class="btn btn-primary btn-lg" th:data-pro_num="${product.pro_num}" id="btn_direct_order">바로구매</button>
+			<button type="button" class="btn btn-dark btn-lg" th:data-pro_num="${product.pro_num}" id="btn_cart_add">장바구니</button>
+	    </div>
+	</form>
+	</div>
+	</div>
+<div class="row">
+	<div class="col">
+		<div id="pro_info">
+			<ul> 
+			  <li><a href="#pro_detali">상세정보</a></li>
+			  <li><a href="#pro_review">상품리뷰(0)</a></li>
+			  <li><a href="#pro_inquiry">상품문의(QnA)</a></li>
+			  <li><a href="#del_inquiry">배송문의</a></li>
+			</ul>
+			<div id="pro_detali">
+			  <p th:utext="${product.pro_content}"></p>
+			</div>
+			<div id="pro_review">
+				<button type="button" id="btn_review_modal" class="btn btn-dark mb-3">글쓰기</button>
+			  <div id="review_list">
+			  <!-- 상품흐기 위치 -->
+			  </div>
+			   <div id="review_paging">
+			   <!--페이징 위치-->
+			   </div>
+			</div>
+
+			<div id="pro_inquiry">
+				<button type="button" id="btn_qna_modal" class="btn btn-dark mb-3">질문하기</button>
+			<div id="qna_list">
+			  <!-- QnA 들어갈 위치 -->
+			</div>
+			<div id="qna_paging">
+			   <!--페이징 위치-->
+			   </div>
+			</div>
+			<div id="del_inquiry">
+				<p>Mauris eleifend est et turpis. Duis id erat. Suspendisse potenti. Aliquam vulputate, pede vel vehicula accumsan, mi neque rutrum erat, eu congue orci lorem eget lorem. Vestibulum non ante. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce sodales. Quisque eu urna vel enim commodo pellentesque. Praesent eu risus hendrerit ligula tempus pretium. Curabitur lorem enim, pretium nec, feugiat nec, luctus a, lacus.</p>
+				<p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
+			  </div>
+		  </div>
+	</div>
+</div>	
+	
+	
+	<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+
+<!-- Modal 상품리뷰 ********************************************************************************************************************************************** -->
+<div class="modal fade" id="review_modal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">상품후기</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+       <form>
+		  <div class="form-group">
+			<label for="message-text" class="col-form-label">제목</label>
+			<input type="text" class="form-control" id="rev_title">
+			<input type="hidden" class="form-control" id="rev_code">
+		  </div>
+		  <div class="form-group">
+			<label for="message-text" class="col-form-label">내용</label>
+			<textarea class="form-control" id="rev_content"></textarea>
+		  </div>
+		  <div class="form-group row">
+				<label for="title" class="col-sm-1 col-form-label">상품이미지</label>
+				<div class="col-sm-3">
+				  <input type="file" class="form-control" name="uploadFile2" id="uploadFile2">
+				</div>
+				<label for="title" class="col-sm-1 col-form-label">미리보기 이미지</label>
+				<div class="col-sm-3">
+					 <img id="qna_img2" style="width:200px;height:200px;">
+				</div>
+			  </div>
+		  <div class="form-group">
+			<label for="recipient-name" class="col-form-label">별평점</label>
+			<p id="star_rev_rate">
+			  <a class="rev_rate" href="#">☆</a>
+			  <a class="rev_rate" href="#">☆</a>
+			  <a class="rev_rate" href="#">☆</a>
+			  <a class="rev_rate" href="#">☆</a>
+			  <a class="rev_rate" href="#">☆</a>
+			</p>
+		  </div>
+	   </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" id="review_save" class="btn btn-primary" th:data-pro_num="${product.pro_num}" >상품후기저장</button>
+		<button type="button" id="review_modify" class="btn btn-primary" th:data-pro_num="${product.pro_num}" >상품후기수정</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Moda QnA **********************************************************************************************************************************************-->
+<div class="modal fade" id="qna_modal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+	  <div class="modal-content">
+		<div class="modal-header">
+		  <h5 class="modal-title" id="staticBackdropLabel">QnA(상품문의)</h5>
+		  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span>
+		  </button>
+		</div>
+		<div class="modal-body">
+		 <form id="qna_form">
+			<div class="form-group">
+			  <label for="message-text" class="col-form-label">제목</label>
+			  <input type="text" class="form-control" id="que_title">
+			  <input type="hidden" class="form-control" id="qna_idx">
+			</div>
+			<div class="form-group">
+			  <label for="message-text" class="col-form-label">내용</label>
+			  <textarea class="form-control" id="que_content"></textarea>
+			</div>
+			<div class="form-group row">
+				<label for="title" class="col-sm-1 col-form-label">상품이미지</label>
+				<div class="col-sm-3">
+				  <input type="file" class="form-control" name="uploadFile" id="uploadFile">
+				</div>
+				<label for="title" class="col-sm-1 col-form-label">미리보기 이미지</label>
+				<div class="col-sm-3">
+					 <img id="qna_img" style="width:200px;height:200px;">
+				</div>
+			  </div>
+		 </form>
+		</div>
+		<div class="modal-footer">
+		  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  <button type="button" id="qna_save" class="btn btn-primary" th:data-pro_num="${product.pro_num}" >QnA저장</button>
+		  <button type="button" id="qna_modify" class="btn btn-primary" th:data-pro_num="${product.pro_num}" >QnA수정</button>
+		</div>
+	  </div>
+	</div>
+  </div>
+	
+
+	</th:block>
+
+	<th:block layout:fragment="script">
+	<script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>	
+	<script th:inline="javascript">
+	
+	$(document).ready(function() {
+	
+		$( function() {
+		    $( "#pro_info" ).tabs();
+		  } );
+		
+	// 파일첨부시 이미지 미리보기
+	$("#uploadFile2").on("change", function(e) {
+		let file = e.target.files[0];
+
+		let reader = new FileReader();
+		reader.readAsDataURL(file);
+
+		reader.onload = function(e) {
+		$("#qna_img2").attr("src", e.target.result);
+		}
+	});	
+		
+		
+	// 장바구니 추가작업 model2 pro_info_2.html id="btn_cart_add"
+	$("button#btn_cart_add").on("click", function() {
+		
+		console.log("장바구니추가");
+
+		let pro_num = $(this).data("pro_num");
+		let cart_amount = $("#btn_cart_amount").val();
+
+		$.ajax({
+			url: '/cart/cart_add',
+			type: 'get',
+			data: {pro_num : pro_num, cart_amount : cart_amount},
+			datatype: "text",
+			success: function(result) {
+				if(result == "success") {
+					alert("장바구니에 등록되었습니다.");
+					if(confirm("장바구니로 이동하시겠습니까?")) {
+						location.href = "/cart/cart_list";
+					}
+					$("#order_process_popup_2").modal('hide');
+				}
+			}
+
+		});
+	});
+
+	// 상품후기와 페이징정보를 호출하는 작업
+	let reviewPage = 1;  // 상품 후기 페이지에서 첫 번째 페이지를 보여주기 위한 변수를 선언합니다.
+	
+	// 요청할 후기 목록의 URL을 구성하는 코드입니다.
+	// [[${product.pro_num}]]은 Thymeleaf 템플릿 엔진을 통해 서버 측에서 상품 번호(pro_num)를 가져와 URL에 포함시킵니다.
+	let url = "/review/revlist/" + [[${product.pro_num}]] + "/" + reviewPage;
+
+	// console.log("상품후기주소" ,url);
+
+	getReviewList(url);
+
+	function getReviewList(url) {
+
+		// $.getJSON() 함수를 사용하여 AJAX 요청을 보냅니다.
+		// 이 함수는 jQuery의 AJAX 함수 중 하나로, 서버에 GET 요청을 보내고 JSON 형식의 응답을 처리합니다.
+		// 요청이 성공하면 서버에서 반환한 JSON 데이터가 reviewlist 매개변수로 전달됩니다.
+		$.getJSON(url, function(reviewlist) {
+			// console.log("reviewlist", reviewlist.revlist);
+			// console.log("reviewlist", reviewlist.pageMaker);
+
+			print_reviewlist(reviewlist.revlist, $("#review_list"), $("#review-template"));
+			print_paging(reviewlist.pageMaker, $("#review_paging"));
+		});
+	}
+	
+	// 1) 상품후기 UI작업 : Handlebars 템플릿이용
+	let print_reviewlist = function(reviewData, target, template) { 
+		let templateObj = Handlebars.compile(template.html());  // Handlebars 템플릿 문자열을 컴파일합니다. template.html() 메서드는 템플릿 요소의 HTML 콘텐츠를 가져옵니다. Handlebars.compile 메서드는 이를 Handlebars 템플릿 함수로 컴파일합니다.
+		let reviewHtml = templateObj(reviewData); // 컴파일된 템플릿 함수(templateObj)를 사용하여 reviewData를 HTML로 렌더링합니다. 렌더링된 결과는 reviewHtml 변수에 저장됩니다.
+		target.children().remove(); // target 요소의 모든 자식 요소를 제거합니다. 이를 통해 기존 내용을 모두 지우고 새로운 내용을 추가할 준비를 합니다.
+		target.append(reviewHtml); // 렌더링된 HTML(reviewHtml)을 target 요소에 추가합니다. 이를 통해 화면에 리뷰 데이터를 표시합니다.
+	}
+
+	// 페이징 UI작업 : 로직으로 작업. Handlebars로는 작업이 힘듬
+	let print_paging = function(pageData,target) { // reviewData : pageMaker, target : review_paging
+		let str = '<nav aria-label="Page navigation example">';
+			str += '<ul class="pagination">';
+			
+		// 이전표시여부
+		if(pageData.prev) {
+			str += '<li class="page-item">';
+			str += `<a class="page-link" href="${pageData.startPage - 1}" aria-label="Previous">`
+			str += `<span aria-hidden="true">&laquo;</span>`;
+			str += `</a>`;
+		}
+
+		// 번호표시
+		for(let i=pageData.startPage; i <= pageData.endPage; i++) {
+			let className = pageData.cri.pageNum == i ? 'active' : '';
+			str += `<li class="page-item ${className}"><a class="page-link" href="${i}">${i}</a></li>`;
+		}
+
+		// 다움표시여부
+		if(pageData.next) {
+			str += '<li class="page-item">';
+			str += `<a class="page-link" href="${pageData.endPage + 1}" aria-label="Next">`
+			str += `<span aria-hidden="true">&raquo;</span>`;
+			str += `</a>`;
+		}
+
+
+		target.html(str);
+
+	}
+	
+	// 페이징 클릭 이벤트
+	$("#review_paging").on("click","nav ul.pagination a",function(e) {
+		e.preventDefault();
+		reviewPage = $(this).attr("href"); // 선택한 페이지번호값이 들어감
+
+		url = "/review/revlist/" + [[${product.pro_num}]] + "/" + reviewPage;
+		getReviewList(url);
+
+	});
+
+	// 리뷰작성 모델
+	$("#btn_review_modal").on("click", function(){
+		$("#review_save").show();
+		$("#review_modify").hide(); // 화면에 보이지 않게함
+		$("#review_modal").modal('show');
+	});
+
+	// 별평점 클릭
+	$("#star_rev_rate a.rev_rate").on("click", function(e){
+		e.preventDefault();
+		$(this).parent().children().removeClass("on"); // 부모 요소 아래의 모든 자식 요소의 'on' 클래스를 제거합니다.
+		$(this).addClass("on").prevAll("a").addClass("on"); // 클릭한 별점 요소에 'on' 클래스를 추가하고, 그 앞의 모든 형제 요소의 'on' 클래스도 추가합니다.
+	})
+
+	// 상품후기 저장
+	$("button#review_save").on("click",function() {
+		let pro_num = $(this).data("pro_num");
+		// console.log(pro_num);
+
+		let rev_code = $("#rev_code").val();
+		let rev_title = $("#rev_title").val();
+		let rev_content = $("#rev_content").val();
+		let uploadFile2 = $("#uploadFile2")[0].files[0];
+		let rev_rate = 0; // 평균 기본값 0
+		
+
+		$("#star_rev_rate a.rev_rate").each(function () {
+			if($(this).attr("class") == "rev_rate on") { // 현재 요소가 선택된(클래스에 on이 포함된) 별점 요소인지를 확인하는 조건입니다.
+				rev_rate += 1;
+			}
+		});
+
+		// 유효성검사
+		if(rev_title == "") {
+			alert("제목을 입력하세요.");
+			return;
+		}
+
+		if(rev_content == "") {
+			alert("내용을 입력하세요.");
+			return;
+		}
+
+		if(rev_rate == 0) {
+			alert("별평점을 입력하세요.");
+			return;
+		}
+
+		let formData = new FormData();
+		formData.append("pro_num", pro_num);
+		formData.append("rev_code", rev_code);
+		formData.append("rev_title", rev_title);
+		formData.append("rev_content", rev_content);
+		formData.append("uploadFile2", uploadFile2); // 파일 추가
+		formData.append("rev_rate", rev_rate);
+
+		$.ajax({
+			url: '/review/review_save',
+			type: 'post',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function(result) {
+				alert("상품후기가 등록됨");
+				$("#review_modal").modal('hide');
+				getReviewList(url); // 상품후기목록과페이징정보를 갱신
+			}
+
+		});
+	});
+
+	// Handlebars함수: 날짜포맷
+	Handlebars.registerHelper("convertDate", function(rev_date) {
+		const d = new Date(rev_date);
+		let year = d.getFullYear();
+		let month = d.getMonth() + 1;
+		let date = d.getDate();
+		let hour = d.getHours();
+		let minutes = d.getMinutes();
+		
+		// 월과 일이 한 자리 숫자일 경우 앞에 0을 추가하여 두 자리로 만듭니다.
+	    month = month < 10 ? '0' + month : month;
+	    date = date < 10 ? '0' + date : date;
+
+		return `${year}/${month}/${date} ${hour}:${minutes}`;
+	});
+
+	// Handlebars함수: 평점별표
+	Handlebars.registerHelper("displayStar", function(rating) {
+		let str = "";
+		switch(rating) {
+			case 1:
+				star = "★☆☆☆☆";
+				break;
+			case 2:
+				star = "★★☆☆☆";
+				break;
+			case 3:
+				star = "★★★☆☆";
+				break;
+			case 4:
+				star = "★★★★☆";
+				break;
+			case 5:
+				star = "★★★★★";
+				break;
+		}
+
+		return star;
+	});
+
+		// Handlebars함수: 작성자와로그인사용자가 일치되면 삭제,수정 표시
+		Handlebars.registerHelper("authContorlview", function(user_id, rev_code) {
+
+			let loginVo = /*[[ ${session.login_status} ]]*/;
+			// console.log(loginId);
+
+			let loginId = "";
+			if(loginVo !== null) {
+				loginId = /*[[${session.login_status == null ? '' : session.login_status.user_id}]]*/;
+			}
+
+
+			let str = "";
+			if(loginVo !== null && loginId == user_id) {
+				str += `<button type="button" name="review_edit" class="btn btn-outline-primary" data-rev_code="${rev_code}">수정</button>`;
+				str += `<button type="button" name="review_delete" class="btn btn-outline-danger" data-rev_code="${rev_code}">삭제</button>`
+				
+				return new Handlebars.SafeString(str); // 태그효과 적용을 위해 작성
+
+			}else {
+				return "";
+			}
+		});
+
+		// 상품후기 삭제
+		$("div#review_list").on("click", "button[name='review_delete']", function() {
+			
+			if(!confirm("삭제하시겠습니까?")) return;
+
+			let rev_code = $(this).data("rev_code");
+
+			$.ajax({
+				url: '/review/review_delete/' + rev_code,
+				headers: {
+					"Content-Type" : "application/json", "x-HTTP-Method-Override" : "DELETE"
+				},
+				type: 'delete',
+				datatype: 'text',
+				success: function(result) {
+					alert("상품후기가 삭제됨");
+					getReviewList(url);  // 상품후기목록, 페이징정보를 갱신
+				}
+
+			});
+		});
+
+		// 상품후기 수정폼(수정하는 작업을 보여주기위해)
+		$("div#review_list").on("click","button[name='review_edit']",function() {
+			let rev_code = $(this).data("rev_code");
+			
+
+
+			$.ajax({
+				url: '/review/rev_modify/' + rev_code,  // REST API
+				headers: {
+					"Content-Type" : "application/json", "x-HTTP-Method-Override" : "GET"
+				},
+				type: 'get',
+				dataType: 'json', // 스프링에서 넘어오는 데이터가 무슨타입인지 확인
+				success: function(result) { // result: 스프링에서 넘어오는 값 (상품후기 내용이 들어옴)
+					console.log(result);
+
+					// model 내용에 상품후기 출력작업
+					$("#rev_title").val(result.rev_title);
+					$("#rev_content").val(result.rev_content);
+					$("#rev_code").val(result.rev_code);
+
+					let rev_rate = result.rev_rate;
+
+					$("p#star_rev_rate a.rev_rate").each(function(indax,item){
+
+						if(indax < rev_rate) {
+							$(this).addClass("on");
+						}
+					}); 
+					// modal 보여주기
+					$("#review_save").hide();
+					$("#review_modify").show();
+					$("#review_modal").modal('show');
+					
+				}
+			});
+		});
+
+		// 상품후기 수정클릭
+		// 상품후기 저장
+	$("button#review_modify").on("click",function() {
+		let pro_num = $(this).data("pro_num");
+		// console.log(pro_num);
+
+		let rev_code = $("#rev_code").val();
+		let rev_title = $("#rev_title").val();
+		let rev_content = $("#rev_content").val();
+		let rev_rate = 0; // 평균 기본값 0
+
+		$("#star_rev_rate a.rev_rate").each(function () {
+			if($(this).attr("class") == "rev_rate on") { // 현재 요소가 선택된(클래스에 on이 포함된) 별점 요소인지를 확인하는 조건입니다.
+				rev_rate += 1;
+			}
+		});
+
+		// 유효성검사
+		if(rev_title == "") {
+			alert("제목을 입력하세요.");
+			return;
+		}
+
+		if(rev_content == "") {
+			alert("내용을 입력하세요.");
+			return;
+		}
+
+		if(rev_rate == 0) {
+			alert("병평점을 입력하세요.");
+			return;
+		}
+
+		// 자바스크립트 object문법사용
+		let review_data = {rev_code : rev_code, pro_num : pro_num, rev_title : rev_title, rev_content : rev_content, rev_rate : rev_rate}
+
+		$.ajax({
+			url: '/review/review_modify',
+			headers: {
+				"Content-Type" : "application/json", "x-HTTP-Method-Override" : "PUT"
+			},
+			type: 'put',
+			data: JSON.stringify(review_data), // 자바스크립트 Object문법을 JSON으로 변환하는 작업
+			datatype: 'text',
+			success: function(result) {
+				alert("상품후기가 수정됨");
+				$("#review_modal").modal('hide');
+				getReviewList(url); // 상품후기목록과페이징정보를 갱신
+			}
+
+		});
+	});
+
+	// 바로구매 id="btn_direct_order"
+	$("#btn_direct_order").on("click",function() {
+		console.log("바로구매");
+		
+		let cart_amount = $("#btn_cart_amount").val();
+		let pro_num = $(this).data("pro_num");
+		let url = `/order/productorder?pro_num=${pro_num}&cart_amount=${cart_amount}`;
+
+		location.href = url;
+
+		});
+	
+/*****************************************************************************************************************************/
+
+// 페이징 클릭 이벤트
+$("#qna_paging").on("click","nav ul.pagination a",function(e) {
+	e.preventDefault();
+	qnaPage = $(this).attr("href"); // 선택한 페이지번호값이 들어감
+
+	url = "/qnaboard/qnalist/" + [[${product.pro_num}]] + "/" + qnaPage;
+	getQnaList(url);
+
+});
+
+
+// 파일첨부시 이미지 미리보기
+$("#uploadFile").on("change", function(e) {
+	let file = e.target.files[0];
+
+	let reader = new FileReader();
+	reader.readAsDataURL(file);
+
+	reader.onload = function(e) {
+	$("#qna_img").attr("src", e.target.result);
+	}
+});
+		// qna와 페이징정보를 호출하는 작업
+	let qnaPage = 1;  // qna 페이지에서 첫 번째 페이지를 보여주기 위한 변수를 선언합니다.
+	
+	// 요청할 qna의 URL을 구성하는 코드입니다.
+	// [[${product.pro_num}]]은 Thymeleaf 템플릿 엔진을 통해 서버 측에서 상품 번호(pro_num)를 가져와 URL에 포함시킵니다.
+	let qnaurl = "/qnaboard/qnalist/" + [[${product.pro_num}]] + "/" + qnaPage;
+
+	// console.log("상품후기주소" ,url);
+
+	getQnaList(qnaurl);
+
+	function getQnaList(qnaurl) {
+
+		// $.getJSON() 함수를 사용하여 AJAX 요청을 보냅니다.
+		// 이 함수는 jQuery의 AJAX 함수 중 하나로, 서버에 GET 요청을 보내고 JSON 형식의 응답을 처리합니다.
+		// 요청이 성공하면 서버에서 반환한 JSON 데이터가 qnalist 매개변수로 전달됩니다.
+		$.getJSON(qnaurl, function(question) {
+			// console.log("reviewlist", reviewlist.revlist);
+			// console.log("reviewlist", reviewlist.pageqna);
+
+			print_qnalist(question.qnalist, $("#qna_list"), $("#qna-template"));
+			print_page(question.pageqna, $("#qna_paging"));
+		});
+	}
+	
+	// 1) 상품후기 UI작업 : Handlebars 템플릿이용
+	let print_qnalist = function(qnaData, target, template) { 
+		let templateObj = Handlebars.compile(template.html());  // Handlebars 템플릿 문자열을 컴파일합니다. template.html() 메서드는 템플릿 요소의 HTML 콘텐츠를 가져옵니다. Handlebars.compile 메서드는 이를 Handlebars 템플릿 함수로 컴파일합니다.
+		let qnaHtml = templateObj(qnaData); // 컴파일된 템플릿 함수(templateObj)를 사용하여 qnaData를 HTML로 렌더링합니다. 렌더링된 결과는 qnaHtml 변수에 저장됩니다.
+		target.children().remove(); // target 요소의 모든 자식 요소를 제거합니다. 이를 통해 기존 내용을 모두 지우고 새로운 내용을 추가할 준비를 합니다.
+		target.append(qnaHtml); // 렌더링된 HTML(qnaHtml)을 target 요소에 추가합니다. 이를 통해 화면에 QnA 데이터를 표시합니다.
+	}
+
+	// 페이징 UI작업 : 로직으로 작업. Handlebars로는 작업이 힘듬
+	let print_page = function(pageqnaData,target) { 
+		let str = '<nav aria-label="Page navigation example">';
+			str += '<ul class="pagination">';
+			
+		// 이전표시여부
+		if(pageqnaData.prev) {
+			str += '<li class="page-item">';
+			str += `<a class="page-link" href="${pageqnaData.startPage - 1}" aria-label="Previous">`
+			str += `<span aria-hidden="true">&laquo;</span>`;
+			str += `</a>`;
+		}
+
+		// 번호표시
+		for(let i=pageqnaData.startPage; i <= pageqnaData.endPage; i++) {
+			let className = pageqnaData.cri.pageNum == i ? 'active' : '';
+			str += `<li class="page-item ${className}"><a class="page-link" href="${i}">${i}</a></li>`;
+		}
+
+		// 다움표시여부
+		if(pageqnaData.next) {
+			str += '<li class="page-item">';
+			str += `<a class="page-link" href="${pageqnaData.endPage + 1}" aria-label="Next">`
+			str += `<span aria-hidden="true">&raquo;</span>`;
+			str += `</a>`;
+		}
+
+
+		target.html(str);
+
+	}
+	// QnA작성 모델
+	$("#btn_qna_modal").on("click", function(){
+		// 폼 필드를 초기화
+		$("#qna_form")[0].reset();
+		
+		// 파일 입력 필드 초기화
+		$("#uploadFile").val(''); // 파일 입력 필드를 리셋하여 이전에 선택된 파일을 제거
+
+		$("#qna_save").show();
+		$("#qna_modify").hide(); // 화면에 보이지 않게함
+		$("#qna_modal").modal('show');
+	});
+
+	// 상품후기 저장
+	$("button#qna_save").on("click",function() {
+		let pro_num = $(this).data("pro_num");
+		// console.log(pro_num);
+
+		let qna_idx = $("#qna_idx").val();
+		let que_title = $("#que_title").val();
+		let que_content = $("#que_content").val();
+		let uploadFile = $("#uploadFile")[0].files[0];
+
+		// 유효성검사
+		if(que_title == "") {
+			alert("제목을 입력하세요.");
+			return;
+		}
+
+		if(que_content == "") {
+			alert("내용을 입력하세요.");
+			return;
+		}
+
+		let formData = new FormData();
+		formData.append("pro_num", pro_num);
+		formData.append("que_title", que_title);
+		formData.append("que_content", que_content);
+		formData.append("uploadFile", uploadFile);
+
+		$.ajax({
+			url: '/qnaboard/qna_save',
+			type: 'post',
+			data: formData, // 자바스크립트 Object문법을 JSON으로 변환하는 작업
+			processData: false, // FormData는 자동으로 처리되므로 false로 설정
+        	contentType: false, // 브라우저가 자동으로 Content-Type을 설정하므로 false로 설정
+			success: function(result) {
+				alert("QnA가 등록됨");
+				$("#qna_modal").modal('hide');
+				getQnaList(qnaurl); // QnA리스트와페이징정보를 갱신
+			}
+
+		});
+	});
+	
+	
+	Handlebars.registerHelper('eq', function(a, b) {
+		return a === b;
+	});
+
+	// Handlebars함수: 날짜포맷
+	Handlebars.registerHelper("conqnatDate", function(rev_date) {
+		const d = new Date(rev_date);
+		let year = d.getFullYear();
+		let month = d.getMonth() + 1;
+		let date = d.getDate();
+		
+		// 월과 일이 한 자리 숫자일 경우 앞에 0을 추가하여 두 자리로 만듭니다.
+	    month = month < 10 ? '0' + month : month;
+	    date = date < 10 ? '0' + date : date;
+
+		return `${year}/${month}/${date}`;
+	});
+
+
+
+}); // ready event end
+	
+	
+	</script>
+	</th:block>
+	
+	  </body>
+	</html>

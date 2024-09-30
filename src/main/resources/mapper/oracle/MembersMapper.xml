@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.admin.membersinfo.MembersMapper">
+
+    <resultMap type="MembersVO" id="MembersMap">
+    	<id property="idx" column="mail_idx" />
+    	<result property="mtitle" column="mail_title" />
+    	<result property="mcontent" column="mail_content" />
+    	<result property="mgubun" column="mail_gubun" />
+    	<result property="mscount" column="mail_send_count" />
+    	<result property="date" column="reg_date" />
+    </resultMap>
+
+
+
+
+<!--  검색조건이 1)목록 2)총데이타 개수 공통사항 -->
+	<!-- 검색종류가 (상품명 또는 제조사 또는 내용) 선택.  "N"  "P"   "C" -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach collection="typeArr" item="type">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'I'.toString()">
+							user_id like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'N'.toString()">
+							user_name like '%' || #{keyword} || '%'
+						</when>
+						<when test="type == 'E'.toString()">
+							user_email like '%' || #{keyword} || '%'
+						</when>
+					</choose>
+				</trim>			
+			</foreach>
+		</trim>
+	</sql>
+
+<select id="member_list" resultType="com.docmall.basic.user.UserVo" parameterType="com.docmall.basic.common.dto.Criteria">
+
+	SELECT
+		user_id, user_pwd, user_name, user_email, user_zipcode, user_addr, user_deaddr, user_phone,user_datesub
+	FROM
+		(
+		SELECT /*+ INDEX_DESC(user_tbl PK_USER_ID) */
+			ROWNUM AS RN, user_id, user_pwd, user_name, user_email, user_zipcode, user_addr, user_deaddr, user_phone,user_datesub
+		FROM
+			user_tbl
+		WHERE
+		<include refid="criteria"></include>
+		<![CDATA[
+		ROWNUM <= (#{pageNum} * #{amount}) -- 페이지번호 * 페이지별 출력건수
+		]]>
+		)	
+		WHERE
+			RN > (#{pageNum} - 1) * #{amount} -- (페이지번호 -1) * 페이지별 출력건수
+</select>
+
+<select id="getTotalCount" resultType="int">
+
+	SELECT
+		COUNT(*)
+	FROM
+		user_tbl
+	WHERE
+		<include refid="criteria"></include>
+	1=1
+
+</select>
+
+<delete id="member_delete" parameterType="String">
+	
+	DELETE FROM
+		user_tbl
+	WHERE
+		user_id = #{user_id}
+
+</delete>
+
+<insert id="mem_mail_save" parameterType="MembersVO">
+	
+	<selectKey keyProperty="idx" resultType="Integer" order="BEFORE">
+		
+		SELECT 
+			SEQ_MAILMNG_IDX.NEXTVAL
+		FROM
+			dual
+	</selectKey>
+
+	INSERT INTO
+		mailmng_tbl(mail_idx, mail_title, mail_content, mail_gubun)
+	VALUES
+		(#{idx}, #{mtitle}, #{mcontent}, #{mgubun})
+</insert>
+		
+	<insert id="save_recipients" parameterType="ReceiverVO">
+		
+		INSERT INTO 
+			recipient_emails(mail_idx ,email)
+		VALUES
+			(SEQ_RECIPIENT_ID.NEXTVAL,#{email})
+	</insert>	
+	
+	
+	<delete id="deleteRecipientByEmail" parameterType="String">
+
+	   DELETE FROM 
+	   		recipient_emails
+	   WHERE 
+	   		email = #{email}
+
+	</delete>
+	
+	<delete id="deletedbRecipientbyEmail" parameterType="String">
+			
+		DELETE FROM 
+	   		recipient_emails
+	   WHERE 
+	   		email = #{email}
+	
+	</delete>
+	
+		
+	<select id="getReceiverList" parameterType="String" resultType="ReceiverVO">
+		
+		SELECT
+			email
+		FROM
+			recipient_emails
+	
+	</select>	
+		
+		
+		
+		
+	<select id="mem_mail_list" parameterType="Criteria"  resultMap="MembersMap">
+	
+		SELECT 
+			mail_idx, mail_title, mail_content, mail_gubun, mail_send_count, reg_date
+		FROM (																		<!-- 인라인뷰 -->
+		    	SELECT /*+ INDEX_DESC(mailmng_tbl PK_MAILMNG_IDX)  */ 
+		        	ROWNUM AS RN, mail_idx, mail_title, mail_content, mail_gubun, mail_send_count, reg_date
+		    	FROM
+		        	mailmng_tbl
+		    	WHERE
+		    		1 = 1
+		    	
+		 <include refid="search_title"></include>  
+  		
+		 <![CDATA[  		
+		   		AND ROWNUM <= (#{cri.pageNum} * #{cri.amount})   -- 페이지번호 * 페이지별 출력건수
+		 ]]>  		
+		)
+		WHERE 
+			RN > (#{cri.pageNum} - 1 ) * #{cri.amount}
+	
+	</select>
+
+	<select id="getMailListCount" parameterType="String" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			mailmng_tbl
+		WHERE
+			1 = 1
+		
+		<include refid="search_title"></include>
+	</select>
+
+
+	<sql id="search_title">
+		<if test="mtitle != null and !mtitle.equals('')">AND mail_title like  '%' || #{mtitle} || '%'</if>
+	</sql>
+	
+	<select id="getALLMemberMail" resultType="String">
+	
+		SELECT 
+			user_email
+		FROM
+			user_tbl
+	
+	
+	</select>
+	
+	<update id="mailSendCountUpdate" parameterType="int">
+	
+		UPDATE
+			mailmng_tbl
+		SET
+			mail_send_count = mail_send_count + 1
+		WHERE
+			mail_idx = #{idx}
+	</update>	
+	
+	<select id="getMailModifyinfo" resultMap="MembersMap">
+	
+		SELECT
+			mail_idx, mail_title, mail_content, mail_gubun, mail_send_count, reg_date
+		FROM
+			mailmng_tbl
+		WHERE
+			mail_idx = #{idx}
+	
+	</select>
+	
+	<update id="mailedit" parameterType="MembersVO">
+	
+		UPDATE
+			mailmng_tbl
+		SET
+			mail_title = #{mtitle}, mail_content = #{mcontent}, mail_gubun = #{mgubun},reg_date = sysdate
+		WHERE
+			mail_idx = #{idx}
+	
+	</update>
+	
+	<delete id="maildelete" parameterType="int">
+	
+		DELETE FROM
+			mailmng_tbl
+		WHERE
+			mail_idx = #{idx}
+	</delete>
+	
+	<delete id="deltetcheckmail" parameterType="Long">
+	
+		DELETE FROM
+			mailmng_tbl
+		WHERE
+			mail_idx = #{idx}
+	
+	</delete>
+	
+
+</mapper>

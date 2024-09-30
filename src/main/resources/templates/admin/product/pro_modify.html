@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{admin/layout/adminlayout}">
+  <head>
+    
+    
+  </head>
+  <!--
+  BODY TAG OPTIONS:
+  =================
+  Apply one or more of the following classes to get the
+  desired effect
+  |---------------------------------------------------------|
+  | SKINS         | skin-blue                               |
+  |               | skin-black                              |
+  |               | skin-purple                             |
+  |               | skin-yellow                             |
+  |               | skin-red                                |
+  |               | skin-green                              |
+  |---------------------------------------------------------|
+  |LAYOUT OPTIONS | fixed                                   |
+  |               | layout-boxed                            |
+  |               | layout-top-nav                          |
+  |               | sidebar-collapse                        |
+  |               | sidebar-mini                            |
+  |---------------------------------------------------------|
+  -->
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+      <!-- Main Header -->
+      
+      <!-- Left side column. contains the logo and sidebar -->
+      
+	<th:block layout:fragment="content">
+      <script src="/plugins/ckeditor/ckeditor.js"></script>
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            상품관리
+            <small>상품을 관리하는 곳입니다.</small>
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="/admin/admin_meun"><i class="fa fa-dashboard"></i>메인페이지</a></li>
+            <li class="active">상품관리</li>
+            <li class="active">상품등록</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+
+          <!-- Your Page Content Here -->
+          <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <div class="box-header with-border">
+                  <h3 class="box-title">상품수정</h3>
+                </div><!-- /.box-header -->
+                <!-- form start -->
+                <form action="/admin/product/pro_modify"  method="post" enctype="multipart/form-data" class="form-horizontal">
+                  <div class="box-body">
+                    <div class="form-group row">
+	                      <label for="inputEmail3" class="col-sm-1 col-form-label">1차 카테고리</label>
+	                      <div class="col-sm-3">
+	                      <select class="form-control" id="btn_firstCategory" size="4">
+	                        <option th:each="category : ${cate_list}" th:value="${category.cat_code}" th:text="${category.cat_name}"
+	                                th:selected="${category.cat_code == cat_prtcode}">
+	                        option 1
+	                        </option>
+	                      </select>
+	                      </div>
+	                      <label for="inputEmail3" class="col-sm-1 col-form-label">2차 카테고리</label>
+	                      <div class="col-sm-3">
+	                      <select class="form-control" id="btn_secondCategory" name="cat_code" size="4">
+	                      <option th:each="category : ${sub_cat_list}" th:value="${category.cat_code}" th:text="${category.cat_name}"
+	                                th:selected="${category.cat_code == Ad_productVO.cat_code}">
+	                        option 1
+	                        </option> 
+	                      </select>
+	                      </div>
+                    </div>
+                    
+                    <div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">상품명</label>
+			              <div class="col-sm-3">
+			              	<input type="hidden" name="pro_num" id="pro_num" th:value="${Ad_productVO.pro_num}">
+			                <input type="text" class="form-control" name="pro_name" id="pro_name" th:value="${Ad_productVO.pro_name}">
+			              </div>
+			              <label for="title" class="col-sm-1 col-form-label">상품가격</label>
+			              <div class="col-sm-3">
+			                <input type="text" class="form-control" name="pro_price" id="pro_price" th:value="${Ad_productVO.pro_price}">
+			              </div>
+						</div>
+						<div class="form-group row">
+			              <label for="title" class="col-sm-1 col-form-label">제조사</label>
+			              <div class="col-sm-3">
+			                <input type="text" class="form-control" name="pro_publisher" id="pro_publisher" th:value="${Ad_productVO.pro_publisher}">
+			              </div>
+						</div>
+						<div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">상품이미지</label>
+			              <div class="col-sm-3">
+			              	 <input type="hidden" name="pro_up_folder" th:value="${Ad_productVO.pro_up_folder}">
+			              	 <input type="hidden" name="pro_img" th:value="${Ad_productVO.pro_img}">
+			                <input type="file" class="form-control" name="uploadFile" id="uploadFile">
+			              </div>
+			              <label for="title" class="col-sm-1 col-form-label">미리보기 이미지</label>
+			              <div class="col-sm-3">
+			               	<img id="img_preview" style="width:200px;height:200px;" th:src="${'/admin/product/image_display?dateFolderName=' + Ad_productVO.pro_up_folder + '&fileName=' + Ad_productVO.pro_img}">
+			              </div>
+						</div>
+						<div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">상품설명</label>
+			              <div class="col-sm-10">
+			                <textarea class="form-control" name="pro_content" id="pro_content" rows="3" style="width: 860px;" th:text="${Ad_productVO.pro_content}"></textarea>
+			              </div>
+			            </div>
+			            <div class="form-group row">
+						  <label for="title" class="col-sm-1 col-form-label">수량</label>
+			              <div class="col-sm-3">
+			                <input type="text" class="form-control" name="pro_amount" id="pro_amount" th:value="${Ad_productVO.pro_amount}">
+			              </div>
+			              <label for="title" class="col-sm-1 col-form-label">판매여부</label>
+			              <div class="col-sm-3">
+			               	<select class="form-control" id="pro_buy" name="pro_buy">
+			                  <option value="Y" th:selected="${Ad_productVO.pro_buy == 'Y'}">판매가능</option>
+			                  <option value="N" th:selected="${Ad_productVO.pro_buy == 'N'}">판매불가능</option>
+			                </select>
+			              </div>
+						</div>
+                  </div><!-- /.box-body -->
+                  <div class="box-footer">
+                    <button type="submit" class="btn btn-default" id="btn_pro_modify">상품수정</button>
+                  </div><!-- /.box-footer -->
+                </form>
+              </div>
+          	</div>
+          </div>
+          
+
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+    </th:block>
+
+      <!-- Main Footer -->
+      
+
+      <!-- Control Sidebar -->
+      
+    
+
+    <!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+    <script>
+
+      $(document).ready(function() {
+        //1차카테고리 선택
+        $("#btn_firstCategory").on("change", function() {
+          
+          let cat_code = $("#btn_firstCategory").val();
+
+//          console.log("cat_code",cat_code);
+          // 2차카테고리 주소
+          let url = "/admin/category/secondcategory/" + cat_code;
+
+          $.getJSON(url, function(secondcategory_result) {
+            let btn_secondCategory = $("#btn_secondCategory"); // 2차카테고리 select태그를 참조
+            let optionStr = "";
+
+            for(let i=0; i<secondcategory_result.length; i++) {
+              optionStr += "<option value='" + secondcategory_result[i].cat_code + "'>" + secondcategory_result[i].cat_name + "</option>";
+            }
+
+            btn_secondCategory.find("option").remove();
+            //btn_secondCategory.append("<option>2차카테고리 선택</option>");
+            btn_secondCategory.append(optionStr);
+          });
+
+        });
+
+        // 파일첨부시 이미지 미리보기
+        $("#uploadFile").on("change", function(e) {
+          let file = e.target.files[0];
+
+          let reader = new FileReader();
+          reader.readAsDataURL(file);
+
+          reader.onload = function(e) {
+            $("#img_preview").attr("src", e.target.result);
+          }
+        });
+        
+     // ckeditor 환경설정. 자바스크립트 Ojbect문법
+     var ckeditor_config = {
+             resize_enabled : false,
+             enterMode : CKEDITOR.ENTER_BR,
+             shiftEnterMode : CKEDITOR.ENTER_P,
+             toolbarCanCollapse : true,
+             removePlugins : "elementspath", 
+             //업로드 탭기능추가 속성. CKEditor에서 파일업로드해서 서버로 전송클릭하면 , 이 주소가 동작된다.
+             filebrowserUploadUrl: '/admin/product/imageupload' 
+     }
+
+     CKEDITOR.replace("pro_content", ckeditor_config);
+
+     console.log("ckediotr 버전: ", CKEDITOR.version);  // ckediotr 버전:  4.12.1 (Standard)
+        
+     $("#btn_pro_modify").on("click", function() {
+    	 alert("수정이 완료되었습니다.");
+     
+     });
+     
+        
+      }); // ready event end
+
+    </script>
+    </th:block>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.order.OrderMapper">
+
+	<insert id="order_insert" parameterType="OrderVO">
+		
+		<selectKey keyProperty="order_num" resultType="Long" order="BEFORE">
+			
+			SELECT
+				SEQ_ORDER_NUM.NEXTVAL
+			FROM
+				dual
+		</selectKey>
+	
+		INSERT INTO
+			order_num_tbl(order_num, user_id, order_name, order_zipcode, order_addr, order_deaddr, order_pho, order_price, order_req)
+		VALUES
+			(#{order_num}, #{user_id}, #{order_name}, #{order_zipcode}, #{order_addr}, #{order_deaddr}, #{order_pho}, #{order_price}, #{order_req})
+	</insert>
+
+	<insert id="orderDetail_insert" parameterType="map">
+	
+		INSERT INTO
+			order_det_tbl(order_num, pro_num, item_amount, item_price)
+		SELECT
+			#{order_num},p.pro_num,c.cart_amount,p.pro_price
+		FROM
+			cart_tbl c
+		INNER JOIN
+			product_tbl p
+		ON
+		  c.pro_num = p.pro_num
+		WHERE
+			c.user_id = #{user_id}
+	
+	</insert>
+
+
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.userpay.UserPayMapper">
+
+	<insert id="userpay_insert" parameterType="UserPayVO">
+		INSERT INTO 
+			userpay(pay_id, order_num, user_id, paymethod, payinfo, pay_price, pay_status)
+		VALUES
+			(SEQ_PAYINFO_ID.NEXTVAL, #{order_num},#{user_id},#{paymethod},#{payinfo},#{pay_price},#{pay_status})
+	
+	</insert>
+	
+	<select id="order_pay_info" parameterType="Long" resultType="UserPayVO">
+		
+	SELECT	
+		pay_id, order_num, user_id, paymethod, payinfo, pay_price, pay_status,pay_date
+	FROM
+		userpay
+	WHERE
+		order_num = #{order_num}	
+	
+	
+	</select>
+	
+	<update id="pay_tot_price_change" parameterType="Long">
+	
+		UPDATE
+			userpay
+		SET
+			pay_price = (
+						SELECT SUM(item_amount * item_price) FROM order_det_tbl WHERE order_num = #{order_num}
+						)
+		WHERE
+			order_num = #{order_num}
+	
+	
+	</update>
+	
+	<update id="order_pay_modify" parameterType="map">
+	
+		UPDATE
+			userpay
+		SET
+			pay_status = #{pay_status}
+		WHERE
+			order_num = #{order_num}
+	
+	</update>
+	
+	
+	
+	
+
+</mapper>

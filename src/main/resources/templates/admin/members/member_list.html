@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{admin/layout/adminlayout}">
+  <head>
+    
+    
+  </head>
+  <!--
+  BODY TAG OPTIONS:
+  =================
+  Apply one or more of the following classes to get the
+  desired effect
+  |---------------------------------------------------------|
+  | SKINS         | skin-blue                               |
+  |               | skin-black                              |
+  |               | skin-purple                             |
+  |               | skin-yellow                             |
+  |               | skin-red                                |
+  |               | skin-green                              |
+  |---------------------------------------------------------|
+  |LAYOUT OPTIONS | fixed                                   |
+  |               | layout-boxed                            |
+  |               | layout-top-nav                          |
+  |               | sidebar-collapse                        |
+  |               | sidebar-mini                            |
+  |---------------------------------------------------------|
+  -->
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+      <!-- Main Header -->
+      
+      <!-- Left side column. contains the logo and sidebar -->
+      
+	<th:block layout:fragment="content">
+      <script src="/plugins/ckeditor/ckeditor.js"></script>
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            회원리스트
+            <small>회원리스트 메뉴입니다.</small>
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="/admin/admin_meun"><i class="fa fa-dashboard"></i>메인페이지</a></li>
+            <li class="active">회원관리</li>
+            <li class="active">회원목록</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+
+          <!-- Your Page Content Here -->
+          <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <!-- list start -->
+                <div class="row">
+    		<div class="col-md-12">
+    			<div class="box">
+					<div class="box-header with-border">
+					<h3 class="box-title"><b>Member List</b></h3>
+					</div>
+
+					<div class="box-body">
+						<div>
+							<form action="/admin/members/member_list" method="get" >
+									<select name="type">
+										<option selected>검색종류선택</option>
+										<option value="I">회원아이디</option>
+										<option value="N">회원이름</option>
+										<option value="E">회원이메일</option>
+										<option value="IN">아이디 or 이름</option>
+									</select>
+									<input type="text" name="keyword" th:value="${pageMaker.cri.keyword}" />
+									<input type="hidden" name="pageNum" th:value="${pageMaker.cri.pageNum}" />
+									<input type="hidden" name="amount" th:value="${pageMaker.cri.amount}" />
+									<button type="submit" class="btn btn-primary">검색</button>
+							</form>
+						</div>
+						<table class="table table-bordered">
+							<tbody><tr>
+								<th style="width: 8%">회원아이디</th>
+								<th style="width: 10%">회원이름</th>
+								<th style="width: 25%">회원이메일</th>
+								<th style="width: 10%">회원우편번호</th>
+								<th style="width: 10%">전화번호</th>
+								<th style="width: 15%">가입일</th>
+								<th style="width: 10%">삭제</th>
+							</tr>
+							
+							<tr th:each="member : ${member_list}">
+								<td>[[${member.user_id}]]</td>
+								<td><a class="move user_name" href="#" th:text="${member.user_name}"></a></td>
+								<td>[[${member.user_email}]]</td>
+								<td>[[${member.user_zipcode}]]</td>
+								<td>[[${member.user_phone}]]</td>
+								<td th:text="${#dates.format(member.user_datesub, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td><button type="button" class="btn btn-danger" name="btn_mem_delete" th:data-member_delete="${member.user_id}"><b>회원탈퇴</b></button></td>
+							</tr>
+							
+							
+							
+							
+							</tbody></table>
+					</div>
+					<div class="box-footer clearfix">
+						<div class="row">
+							<div class="col-md-4">
+							<!--1)페이지번호 클릭할 때 사용  [이전]  1	2	3	4	5 [다음]  -->
+							<!--2)목록에서 상품이미지 또는 상품명 클릭할 때 사용   -->
+							  <form id="actionForm" action="" method="get">
+								<input type="hidden" name="pageNum" id="pageNum" th:value="${pageMaker.cri.pageNum}" />
+								<input type="hidden" name="amount"  id="amount" th:value="${pageMaker.cri.amount}" />
+								<input type="hidden" name="type" id="type" th:value="${pageMaker.cri.type}" />
+								<input type="hidden" name="keyword" id="keyword" th:value="${pageMaker.cri.keyword}" />
+								
+							  </form>
+							</div>
+							<div class="col-md-6 text-center">
+								<nav aria-label="...">
+								<ul class="pagination">
+									<!-- 이전 표시여부 -->
+									
+									<th:block th:if="${pageMaker.prev }">
+										<li class="page-item">
+											<a th:href="${pageMaker.startPage - 1 }" class="page-link movepage">이전</a>
+										</li>
+									</th:block>
+									
+									<!-- https://jbground.tistory.com/40 페이지번호 출력 -->
+									<!-- 1	2	3	4	5 6	7	8	9	10  [다음] -->
+									<!-- [이전] 11	12	13	14	15 16	17	18	19	20   -->
+
+									<th:block th:with="pageMaker = ${pageMaker}">
+										<th:block th:each="num : *{#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+										<li class='page-item' th:classappend="${pageMaker.cri.pageNum ==  num ? 'active': '' }" aria-current="page">
+											<a class="page-link movepage" th:href="${num }" th:text="${num }"></a>
+										</li>
+										</th:block>
+									</th:block>
+
+									<!--  다음 표시여부 -->
+									<th:block th:if="${pageMaker.next }">
+									  <li class="page-item">
+										<a th:href="${pageMaker.endPage + 1 }" class="page-link movepage">다음</a>
+									  </li>
+									</th:block>
+									
+								</ul>
+								</nav>
+							</div>
+							<div class="col-md-2 text-right">
+								<button type="submit" class="btn btn-dark">회원등록</button>
+							</div>
+						</div>
+						
+					</div>
+			   </div>
+    		</div>
+    	</div>
+              </div>
+          	</div>
+          </div>
+          
+
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+    </th:block>
+
+      <!-- Main Footer -->
+      
+
+      <!-- Control Sidebar -->
+      
+    
+
+    <!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+    <script>
+
+      $(document).ready(function() {
+        
+        let actionForm = $("#actionForm");
+        
+        $(".movepage").on("click", function(e) {
+			e.preventDefault();   // a태그의 href기능 제거
+			// 주소변경
+			actionForm.attr("action", "/admin/members/member_list"); // <form id="actionForm" action="" method="get"> action주소를 변경
+        	// 클릭한 페이지번호 작업
+        	// pageNum이라는 이름의 숨겨진 입력 필드를 찾아서, 클릭된 페이지 번호 링크의 href 속성 값을 해당 입력 필드에 설정
+        	actionForm.find("input[name='pageNum']").val($(this).attr("href")); // $(this): 현재클릭한 태그를 가르킴
+        	
+        	// 전송
+			actionForm.submit();
+        
+        });
+        
+     // 삭제버튼 클릭시 name=btn_pro_delete
+        $("button[name='btn_mem_delete']").on("click", function() {
+        	let member_delete = $(this).data("member_delete");
+			
+        	if(!confirm("회원을 탈퇴시키겠습니까?")) return;
+        	
+        	// 뒤로버튼 클릭시 사용되어 문제를 일으킴 방지목적
+			actionForm.find("input[name='member_delete']").remove();
+        				
+			console.log("회원아이디: " + member_delete);
+        
+			// 자바스크립트 문법 : String template. 백틱에 문자열과 변수를 함께사용 가능한 문법 
+			let str = `<input type="hidden" name="user_id" id="user_id" value="${member_delete}" />`;
+			console.log(str);
+
+			actionForm.append(`<input type="hidden" name="user_id" id="user_id" value="${member_delete}" />`);
+			actionForm.attr("method", "post");
+			actionForm.attr("action", "/admin/members/member_delete");
+			
+			actionForm.submit();
+			
+        });
+     
+     
+     
+     
+        
+      }); // ready event end
+
+    </script>
+    </th:block>
+  </body>
+</html>

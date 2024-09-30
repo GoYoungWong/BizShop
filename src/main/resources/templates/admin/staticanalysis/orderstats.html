@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+This is a starter template page. Use this page to start your new project from
+scratch. This page gets rid of all links and provides the needed markup only.
+-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{admin/layout/adminlayout}">
+  <head>
+    
+    
+  </head>
+  <!--
+  BODY TAG OPTIONS:
+  =================
+  Apply one or more of the following classes to get the
+  desired effect
+  |---------------------------------------------------------|
+  | SKINS         | skin-blue                               |
+  |               | skin-black                              |
+  |               | skin-purple                             |
+  |               | skin-yellow                             |
+  |               | skin-red                                |
+  |               | skin-green                              |
+  |---------------------------------------------------------|
+  |LAYOUT OPTIONS | fixed                                   |
+  |               | layout-boxed                            |
+  |               | layout-top-nav                          |
+  |               | sidebar-collapse                        |
+  |               | sidebar-mini                            |
+  |---------------------------------------------------------|
+  -->
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+      <!-- Main Header -->
+      
+      <!-- Left side column. contains the logo and sidebar -->
+      
+	<th:block layout:fragment="content">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script> <!-- 차트 자바스크립트 라이브러리 참조 -->
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            카테고리별 월매출현황
+            <small>통계 메뉴입니다.</small>
+          </h1>
+          <ol class="breadcrumb">
+            <li><a href="/admin/admin_meun"><i class="fa fa-dashboard"></i>메인페이지</a></li>
+            <li class="active">통계관리</li>
+            <li class="active">카테고리 월매출</li>
+          </ol>
+        </section>
+
+        <!-- Main content -->
+        <section class="content">
+
+          <!-- Your Page Content Here -->
+          <div class="row">
+          	<div class="col">
+          		<div class="box box-info">
+                <!-- list start -->
+                <div class="row">
+    		<div class="col-md-12">
+    			<div class="box">
+					<div class="box-header with-border">
+					<h3 class="box-title">staticanalysis</h3>
+					</div>
+
+					<div class="box-body">
+						<div>
+							<form action="" method="get" >
+									<select name="year" id="year">
+										<option th:each="i : ${#numbers.sequence(2020, #dates.year(#dates.createNow()))}" th:value="${i}" th:text="${i}"
+										th:selected="${i} == ${year}"></option>
+									</select>
+									년
+									<select name="month" id="month">
+										<th:block th:each="i : ${#numbers.sequence(1,12)}">
+											<option th:value="${i}" th:text="${i}" th:selected="${i} == ${month}"></option>
+										</th:block>
+									</select>
+									월
+									<button type="button" class="btn btn-primary" id="selectSearch">검색</button>
+							</form>
+						</div>
+						<div class ="chartjs">
+							<canvas id="salesChart" width="300" height="100"></canvas> <!-- 차트가 출력될 위치 -->
+						</div>
+					</div>
+			   </div>
+    		</div>
+    	</div>
+              </div>
+          	</div>
+          </div>
+          
+
+        </section><!-- /.content -->
+      </div><!-- /.content-wrapper -->
+    </th:block>
+
+      <!-- Main Footer -->
+      
+
+      <!-- Control Sidebar -->
+      
+    
+
+    <!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+    <script>
+		
+      let myChart = null; // 전역변수 (중요): 페이지에서 하나의 차트문법을 검색을 통한 작업시, 반드시 이 객체를 전역변수로 선언한다.
+    
+      $(document).ready(function() {
+        
+       chartData(); // 함수호출
+       
+       // 통계및자트구현함수
+       function chartData() {
+		$.ajax({
+			url:'/admin/staticanalysis/Monthlysalesstatus',
+			type:'get',
+			data:{year : $("#year").val(), month : $("#month").val()},
+			dataType: 'json',
+			success: function(result) {
+
+			  console.log(result);
+			  
+			  // 자바스크립트 배열
+			  let labelNames = [];
+			  let salesPriceData = [];
+
+			  $.each(result, function() {
+					labelNames.push(this['CATGORYNAME_CD']);
+					salesPriceData.push(this['SALSE_P']);
+				});
+			  
+			  console.log("x축: ", labelNames);
+			  console.log("y축: ", salesPriceData);
+			  
+			  let ctx = document.getElementById('salesChart');
+
+			  myChart = new Chart(ctx, {
+			    type: 'bar',
+			    data: {
+			      labels: labelNames, // 1차카테고리 이름들
+			      datasets: [{
+			        label: 'Dataset',
+			        data: salesPriceData, // 총계산 결과들
+			      },
+			      ]
+			    },
+			  });
+			}
+		});
+       };
+     
+       $("#selectSearch").on("click", function() {
+			console.log("날짜검색");
+			if(myChart !== undefined) myChart.destroy();
+			chartData();
+    	   
+    	   
+       });
+
+       
+     
+        
+      }); // ready event end
+
+    </script>
+    </th:block>
+  </body>
+</html>

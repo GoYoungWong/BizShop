@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+	<input type="button" id="btn_order" value="카카오페이결제">
+<script>
+	$(document).ready(function() {
+		
+		$("#btn_order").on("click",function() {
+			$.ajax({
+				url: '/kakapay/kakaoPay',
+				type: 'get',
+				dataType: 'json',
+				success: function(response) {
+					console.log("응답: " + response);
+					
+					alert("카카오페이 결제 페이지로 이동합니다.");
+					location.href = response.next_redirect_pc_url; // 결제QR코드 주소이동
+				}
+			
+			});
+		
+		});
+	});
+
+</script>
+</body>
+</html>

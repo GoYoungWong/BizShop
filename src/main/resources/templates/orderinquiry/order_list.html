@@ -1,0 +1,368 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+<!-- 1) Include Handlebars from a CDN 사용목적 -->
+	<script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script> <!--Handlebars사용이유: 단순이 화면에 보여주기위해 사용 -->
+   
+	<script id="order-product-template" type="text/x-handlebars-template">
+	<blockquote>
+		<h5><b>[주문상품정보]</b></h5>
+		</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+				  <th>번호</th>
+			      <th scope="col">주문상품</th>
+			      <td scope="col">판매가</td>
+			      <th scope="col">수량</th>
+			      <td scope="col">주문금액</td>
+			    </tr>
+			  </thead>
+			  <tbody>
+				{{#each .}}
+			    <tr>
+				  <td>1</td>
+			      <td>
+					<img src="/admin/product/image_display?dateFolderName={{pro_up_folder}}&fileName=s_{{pro_img}}" style="width: 80px;height: 130px;">
+				  <span>{{pro_name}}</span>
+				  </td>
+			      <td>{{item_price}}</td>
+			      <td>{{item_amount}}</td>
+			      <td>{{unit_order_tot_price item_price item_amount}}</td>
+			    </tr>
+				{{/each}}
+			  </tbody>
+			</table>
+	    </script>
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container-fluid">
+    <h1 class="mt-3 mb-4 text-center">주문상품조회</h1>
+    <div class="row">
+	    <div class="col">
+	      <div class="table-responsive">	
+	    	<form action="/orderinquiry/order_list" method="get">
+				<b>날짜검색:</b>
+				<input type="date" name="start_date" min="2021-01-01"> ~ 
+				<input type="date" name="end_date" max="2030-12-31">
+				<button type="submit" class="btn btn-primary">검색</button>	    	
+	    	</form>
+	    	<table class="table table-bordered" style="width: 100%;">
+				<thead class="thead-dark">							
+						<tr>
+							<th style="width: 8%">주문코드</th>
+							<th style="width: 8%">주문자</th>
+							<th style="width: 20%">주문가격</th>
+							<th style="width: 15%">주문일</th>
+							<th style="width: 20%">환불/교롼/반품</th>
+							<th style="width: 20%">주문상세보기</th>
+							<th style="width: 8%">배송현황</th>
+						</tr>
+						</thead>
+						<tbody>
+							<tr th:if="${#lists.isEmpty(order_list)}">
+								<td colspan="10" class="text-center">주문한상품이 없습니다.</td>
+							</tr>	
+							<tr th:if="${!#lists.isEmpty(order_list)}" th:each="order : ${order_list}">
+								<td>[[${order.order_num}]]</td>
+								<td>
+									 <span>[[${order.order_name}]]</span>
+								</td>
+								<td><span th:text="${#numbers.formatInteger(order.order_price,3,'COMMA') + '원'}"></span></td>
+								<td th:text="${#dates.format(order.order_redate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td>
+									<button type="button" class="btn btn-primary" name="btn_order_return" th:data-ord_idx="${order.order_num}">반품/환불</button>
+								</td>
+								<td><button type="button" class="btn btn-primary" name="btn_order_info" th:data-ord_idx="${order.order_num}">주문상세보기</button></td>
+								<td>
+									<span th:value="N" th:if="${order.order_status == 'N'}">배송대기중</span>
+									<span th:value="Y" th:if="${order.order_status == 'Y'}">배송중</span>
+									<span th:value="O" th:if="${order.order_status == 'O'}">배송완료</span>
+								</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+			<div class="box-footer clearfix">
+				<div class="row">
+					<div class="col-md-2">
+					<!--1)페이지번호 클릭할 때 사용  [이전]  1	2	3	4	5 [다음]  -->
+					<!--2)목록에서 상품이미지 또는 상품명 클릭할 때 사용   -->
+					  <form id="actionForm" action="" method="get">
+						<input type="hidden" name="pageNum" id="pageNum" th:value="${pageMaker.cri.pageNum}" />
+						<input type="hidden" name="amount"  id="amount" th:value="${pageMaker.cri.amount}" />
+						<input type="hidden" name="type" id="type" th:value="${pageMaker.cri.type}" />
+						<input type="hidden" name="keyword" id="keyword" th:value="${pageMaker.cri.keyword}" />
+						
+					  </form>
+					</div>
+					<div class="col-md-8">
+						<nav aria-label="...">
+						<ul class="pagination justify-content-center">
+							<!-- 이전 표시여부 -->
+							
+							<th:block th:if="${pageMaker.prev }">
+								<li class="page-item ${!pageMaker.prev ? 'disabled' : ''}">
+									<a th:href="${pageMaker.startPage - 1 }" class="page-link movepage">이전</a>
+								</li>
+							</th:block>
+							
+							<!-- https://jbground.tistory.com/40 페이지번호 출력 -->
+							<!-- 1	2	3	4	5 6	7	8	9	10  [다음] -->
+							<!-- [이전] 11	12	13	14	15 16	17	18	19	20   -->
+
+							<th:block th:with="pageMaker = ${pageMaker}">
+								<th:block th:each="num : *{#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+								<li class='page-item' th:classappend="${pageMaker.cri.pageNum ==  num ? 'active': '' }" aria-current="page">
+									<a class="page-link movepage" th:href="${num }" th:text="${num }"></a>
+								</li>
+								</th:block>
+							</th:block>
+
+							<!--  다음 표시여부 -->
+							<th:block th:if="${pageMaker.next }">
+							  <li class="page-item ${!pageMaker.next ? 'disabled' : ''}">
+								<a th:href="${pageMaker.endPage + 1 }" class="page-link movepage">다음</a>
+							  </li>
+							</th:block>
+							
+						</ul>
+						</nav>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+</main>
+<!-- Modal -->
+<div class="modal fade" id="order_ditail_info" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+	  <div class="modal-dialog modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h3 class="modal-title" id="staticBackdropLabel2"><b>상세정보</b></h3>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="closeButton">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+		  </div>
+		  <!-- load()매서드를 이용하여, pro_info_2.html파일이 실행돈 내용이 삽입된다. -->
+		<div class="model-Body" id="order_info">
+
+		<!-- 주문상품정보 -->		
+		<div id="order_product_info">
+		
+		
+		</div>
+		<hr>
+		<blockquote>
+		<h5><b>[결제정보]</b></h5>
+		</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+			      <th scope="col">결제방식</th>
+			      <td scope="col"><input type="text" id="paymethod" readonly></td>
+			      <th scope="col">결제금액</th>
+			      <td scope="col"><input type="text" id="pay_price" readonly></td>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    <tr>
+			      <th scope="row">입금자명</th>
+			      <td><input type="text" id="user_id" readonly></td>
+			      <th>입금계좌</th>
+			      <td><input type="text" id="payinfo" readonly style="width: 220px;"></td>
+			    </tr>
+			    <tr>
+			      <th scope="row">입금상태</th>
+			      <td>
+			      	<input type="text" id="pay_status" readonly>
+			      	<button type="button" id="update_status" class="btn btn-success">완료로변경</button>
+			      </td>
+			      <th>기타</th>
+			      <td><span>기타</span></td>
+			    </tr>
+			  </tbody>
+			</table>
+			<hr>
+			<blockquote>
+			<h5><b>[주문자(수령인)정보]</b></h5>
+			</blockquote>
+			<table class="table table-striped">
+			  <thead>
+			    <tr>
+			      <th scope="col">수령인</th>
+			      <td scope="col">
+			      <input type="text" id="order_name" name="order_name" readonly>
+				  <input type="hidden" id="user_id" name="user_id">
+			      </td>
+			      <th scope="col">전화번호</th>
+			      <td scope="col">
+			      <input type="text" id="order_pho" readonly>
+			      </td>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    <tr>
+			      <th scope="row">주소</th>
+			      <td Colspan="3">
+			      <input type="text" class="form-control" id="sample2_postcode" name="order_zipcode" readonly>
+			      <input type="text" class="form-control" id="sample2_address" name="order_addr" readonly>
+			      <input type="text" class="form-control" id="sample2_detailAddress" name="order_deaddr" readonly>
+                  <input type="hidden" id="sample2_extraAddress" placeholder="참고항목">
+			      </td>
+			    </tr>
+			    <tr>
+			      <th scope="row">배송메모</th>
+			      <td Colspan="3">
+			      	<textarea rows="3" cols="40" id="order_req" name="order_req" readonly></textarea>
+			    </tr>
+			  </tbody>
+			</table>
+			<hr>
+		</div>
+		
+ 	  </div>
+   </div>
+</div>
+
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+	
+ 	
+ 
+ 	$(document).ready(function() {   // ready event start
+		
+ 		// 전역변수
+ 		let actionForm = $("#actionForm");
+ 		let order_num;
+ 		
+ 		$(".movepage").on("click", function(e) {
+			e.preventDefault();   // a태그의 href기능 제거
+			// 주소변경
+			actionForm.attr("action", "/orderinquiry/order_list"); // <form id="actionForm" action="" method="get"> action주소를 변경
+        	// 클릭한 페이지번호 작업
+        	// pageNum이라는 이름의 숨겨진 입력 필드를 찾아서, 클릭된 페이지 번호 링크의 href 속성 값을 해당 입력 필드에 설정
+        	actionForm.find("input[name='pageNum']").val($(this).attr("href")); // $(this): 현재클릭한 태그를 가르킴
+        	
+        	// 전송
+			actionForm.submit();
+        
+        });
+ 		
+ 	  // 상세보기 클릭
+      $("button[name='btn_order_info']").on("click", function() {
+	order_num = $(this).data("ord_idx"); // 전역변수에 할당
+      	order_detail_info();
+	
+	});
+
+	function order_detail_info() {	
+	$("#order_ditail_info").modal('show');
+		
+		$.ajax({
+			url: '/orderinquiry/order_detail_info',
+			type: 'get',
+			data: {order_num : order_num},
+			dataType: 'json',
+			success: function(result) {
+				console.log(result);
+
+				// 주문자(수령인) 작업
+				$("#order_name").val(result.order_basic.order_name);
+				$("#order_pho").val(result.order_basic.order_pho);
+				$("#sample2_postcode").val(result.order_basic.order_zipcode);
+				$("#sample2_address").val(result.order_basic.order_addr);
+				$("#sample2_detailAddress").val(result.order_basic.order_deaddr);
+				$("#order_req").val(result.order_basic.order_req);
+			
+				// 주문상품정보										// 주문정보가 삽입될 위치   // template
+				print_order_product_info(result.order_pro_list,$("#order_product_info"), $("#order-product-template"));
+				
+				// 결제정보
+				$("#paymethod").val(result.payinfo.paymethod);
+				$("#pay_price").val(result.payinfo.pay_price);
+				$("#user_id").val(result.payinfo.user_id);
+				$("#payinfo").val(result.payinfo.payinfo);
+				$("#pay_status").val(result.payinfo.pay_status);
+				
+				// 결제 상태에 따라 버튼 숨기기
+	            if (result.payinfo.pay_status === "완료") {
+	                $('#update_status').hide();
+	            } else {
+	                $('#update_status').show();
+	            }
+				
+			},
+			error:function() {
+
+			}
+		});
+       }
+ 		
+		// 입금상태 변경
+		$("#update_status").on("click", function() {
+			$.ajax({
+				url: '/orderinquiry/order_pay_modify',
+				type: 'post',
+				data: JSON.stringify({order_num : order_num}),
+				contentType: 'application/json',
+				dataType: 'text',
+				success: function(respones) {
+					if(respones === "success") {
+						alert("상태변경이 완료되었습니다.");
+						$("#pay_status").val("완료");
+						$('#update_status').hide(); // 변경 후 버튼 숨기기
+						$("#order_ditail_info").modal('hide');
+					}else {
+						alert("상태변경에 실패했습니다.");
+					}
+				}
+			});
+		});
+		
+		// 반품/환불 폼이동
+		$("button[name='btn_order_return']").on("click", function() {
+			let order_num = $(this).data("ord_idx");
+			console.log(order_num);
+			
+			location.href = `/orderinquiry/order_return_refund?order_num=${order_num}`;
+			
+		
+		});
+		
+	
+	 }); // ready event end
+
+	//Handleber 작업합수
+	let print_order_product_info = function(order_product_data, target, template) {
+		let templateObj = Handlebars.compile(template.html()); // 템플릿 문법검사및 참조
+		let order_product_html = templateObj(order_product_data); 
+		target.children().remove(); // 무한반복 방지
+		target.append(order_product_html); // 주문상품정보 출력될 위치에 뿌림
+	}
+	 
+	// 주문금액(가격 * 수량)
+	Handlebars.registerHelper("unit_order_tot_price", function(item_price,item_amount) {
+
+		return item_price * item_amount;
+	}); 
+	 
+ 
+
+</script>
+ </th:block>
+  </body>
+</html>

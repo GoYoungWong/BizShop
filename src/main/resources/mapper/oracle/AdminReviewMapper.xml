@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.basic.admin.review.AdminReviewMapper">
+
+	<!--  검색조건이 1)목록 2)총데이타 개수 공통사항 -->
+	<!-- 검색종류가 (상품명 또는 제조사 또는 내용) 선택.  "N"  "P"   "C", "NP" -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND" prefixOverrides="OR">
+			<foreach collection="typeArr" item="type">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'U'.toString()">
+							user_id like '%' || #{cri.keyword} || '%'
+						</when>
+						<when test="type == 'P'.toString()">
+							pro_num like '%' || #{cri.keyword} || '%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	<select id="adminrevlist" resultType="ReviewVO">
+	
+		SELECT 
+			rev_code, user_id, pro_num, rev_content, rev_title,pro_up_folder, pro_img ,rev_rate, rev_date
+		FROM (																		<!-- 인라인뷰 -->
+		    	SELECT /*+ INDEX_DESC(review_tbl PK_REVIEW_CODE)  */ 
+		        	ROWNUM AS RN, rev_code, user_id, pro_num, rev_content, rev_title,pro_up_folder, pro_img ,rev_rate, rev_date
+		    	FROM
+		        	review_tbl
+		    	WHERE
+		    		pro_num = #{pro_num}
+		    	AND
+  			<include refid="criteria"></include>	 
+		 <![CDATA[  		
+		   		ROWNUM <= (#{pageNum} * #{amount})   -- 페이지번호 * 페이지별 출력건수
+		 ]]>  		
+		)
+		WHERE 
+			RN > (#{pageNum} - 1 ) * #{amount}
+	
+	</select>
+
+	<select id="getCountReviewBypro_num" resultType="int">
+	
+		SELECT
+			COUNT(*)
+		FROM
+			review_tbl
+			<include refid="criteria"></include>
+		WHERE
+			pro_num > 0
+	
+	</select>
+
+</mapper>

@@ -1,0 +1,136 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+  <h2 class="display-6">장바구니</h2>
+	<hr>
+</div>
+<div class="container" id="cart_info">
+      <div class="row mb-4">
+        <div class="col-md-4">
+          제품
+        </div>
+        <div class="col-md-2">
+          수량
+        </div>
+        <div class="col-md-1">
+          적립
+        </div>
+        <div class="col-md-2">
+          배송비
+        </div>
+        <div class="col-md-2">
+          가격
+        </div>
+        <div class="col-md-1">
+          취소
+        </div>
+      </div>
+     <hr> 
+        <div class="row mb-3 justify-content-center fs-2" th:if="${#lists.isEmpty(cart_list)}"> <!-- 장바구니가 비어있으면..  타임리프 유틸리티 -->
+      	<p>장바구니가 비어있습니다.</p>
+      </div>
+      <div class="row mb-3" th:if="${!#lists.isEmpty(cart_list)}" th:each="cartproduct : ${cart_list}">
+        <div class="col-md-4">
+          <a class="move" href="#">
+			<img th:src="${'/cart/image_display?dateFolderName=' + cartproduct.pro_up_folder + '&fileName=s_' + cartproduct.pro_img}" style="width: 100px;height: 150px;">
+		   </a>
+		   <span th:text="${cartproduct.pro_name}"></span>
+        </div>
+        <div class="col-md-2">
+        	<input type="number" name="cart_amount" th:value="${cartproduct.cart_amount}" class="w-50">
+        	<button type="button" class="btn btn-secondary" name="btn_cart_amount_change" th:data-cart_code="${cartproduct.cart_code}">수량변경</button>
+        </div>
+        <div class="col-md-1">
+        	0
+        </div>
+        <div class="col-md-2">
+        	기본 - 금액별배송비<br>
+	        3,000원<br>
+			(택배-선결제)<br>
+        </div>
+        <div class="col-md-2">
+        	<span th:text="${#numbers.formatInteger(cartproduct.pro_price * cartproduct.cart_amount,3,'COMMA') + '원'}"></span>
+        </div>
+        <div class="col-md-1">
+        	<button type="button" class="btn btn-secondary" th:data-cart_code="${cartproduct.cart_code}" name="btn_cart_code">삭제</button>
+        </div>
+      </div>
+      
+      <div class="row mb-5">
+	    <div class="col text-center">
+        	<button type="button" class="btn btn-secondary" id="btn_cart_empty">장바구니 비우기</button>
+        	<button type="button" class="btn btn-secondary" id="btn_shopping">계속 쇼핑하기</button>
+        	<button type="button" class="btn btn-secondary" id="btn_order">주문하기</button>
+        </div>
+	  </div>
+	  
+ 
+	<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+
+	</th:block>
+	<!-- REQUIRED JS SCRIPTS -->
+	<th:block layout:fragment="script">
+	<script>
+	$(document).ready(function() {
+
+		
+		 // 장바구니 삭제
+		 $("button[name='btn_cart_code']").on("click", function(){
+
+		 	if(!confirm("삭제하시겠습니까?")) return;
+		 	
+		 	location.href = "/cart/cart_delete?cart_code=" + $(this).data("cart_code");
+		 
+		 });
+		
+		 // 장바구니 수량변경
+		 $("button[name='btn_cart_amount_change']").on("click", function() {
+			
+			  let cart_code = $(this).data("cart_code");
+			  let cart_amount = $(this).parent().find("input[name='cart_amount']").val();
+		
+			  location.href = `/cart/cart_change?cart_code=${cart_code}&cart_amount=${cart_amount}`;
+		  });
+
+		 // 장바구니 비우기
+		 $("#btn_cart_empty").on("click", function(){
+				if(!confirm("전부 비우시겠습니까?")) return;
+				location.href = "/cart/cart_empty";
+		 	
+		 });
+		 
+		 // 주문하기 버튼 클릭
+		 $("#btn_order").on("click",function() {
+			 location.href = "/order/productorder";
+		 
+		 });
+		 
+		 // 계속 쇼핑하기
+	        $("#btn_shopping").on("click", function() {
+	          let lastVisitedUrl = sessionStorage.getItem("lastVisitedUrl");
+	          if (lastVisitedUrl) {
+	            window.location.href = lastVisitedUrl;
+	          } else {
+	            alert("이전 페이지를 찾을 수 없습니다.");
+	          }
+	        });
+		 
+
+	}); // ready event end
+	
+	
+	</script>
+	</th:block>
+	
+	  </body>
+	</html>

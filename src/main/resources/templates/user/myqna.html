@@ -1,0 +1,203 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <th:block layout:fragment="css">
+  
+  <style>
+    .table td,
+    .table th {
+        /* 테이블 셀에 기본 padding과 border 설정 */
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .table .title-cell,
+    .table .content-cell {
+        /* 제목과 내용 셀의 최대 너비와 넘치는 내용 처리 */
+        max-width: 200px; /* 원하는 최대 너비 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .table td img {
+        /* 이미지의 크기 조정 */
+        width: 80px;
+        height: 80px;
+    }
+</style>
+  </th:block>
+  
+  
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container">
+    <h1 class="mt-3 mb-4 text-center">나의 QnA</h1>
+    <div class="row">
+	    <div class="col-md-2">
+	        <section th:replace="~{/user/comm/mypage_meun}">
+	    	</section>
+	    </div>
+	    <div class="col-md-10">
+	      <div class="table-responsive">	
+	    	<table class="table table-bordered">
+				<thead class="thead-dark">							
+						<tr>
+							<th style="width: 8%">글번호</th>
+							<th style="width: 8%">상품번호</th>
+							<th style="width: 10%">상품이미지</th>
+							<th style="width: 20%">제목</th>
+							<th style="width: 15%">질문</th>
+							<th style="width: 20%">답변여부</th>
+							<th style="width: 20%">질문날짜</th>
+							<th style="width: 20%;height: 80px;">답변보기</th>
+							<th style="width: 20%">질문삭제</th>
+						</tr>
+						</thead>
+						<tbody>
+							<tr th:if="${#lists.isEmpty(userqnalist)}">
+								<td colspan="10" class="text-center">나의 QnA가 없습니다.</td>
+							</tr>	
+							<tr th:if="${!#lists.isEmpty(userqnalist)}" th:each="userqna : ${userqnalist}">
+								<td>[[${userqna.qna_idx}]]</td>
+								<td>
+									 <span>[[${userqna.pro_num}]]</span>
+								</td>
+								<td>
+									<img th:src="${'/qnaboard/image_display?dateFolderName=' + userqna.pro_up_folder + '&fileName=' + userqna.pro_img}" style="width: 80px;height: 80px;">
+								</td>
+								<td class="title-cell" th:text="${userqna.que_title}"></td>
+								<td class="content-cell" th:text="${userqna.que_content}"></td>
+								<td th:text="${userqna.anscheck == 'Y' ? '답변 완료' : '답변 대기'}"></td>
+								<td th:text="${#dates.format(userqna.question_date, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td><button type="button" class="btn btn-primary" name="btn_qna_modify" th:data-qna_idx="${userqna.qna_idx}">답변보기</button></td>
+								<td><button type="button" class="btn btn-danger" name="btn_qna_delete" th:data-qna_idx="${userqna.qna_idx}">삭제</button></td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+	</div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+</main>
+	 <!-- Modal HTML 수정 -->
+<div class="modal fade" id="adminqna_modal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">답변보기</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="qna_form">
+					<div class="form-group row">
+                        <label for="product_image" class="col-sm-1 col-form-label">상품이미지</label>
+                        <div class="col-sm-3">
+                            <img id="product_image" src="" alt="상품 이미지" style="width: 400px; height: 350px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="que_title" class="col-form-label">제목</label>
+                        <input type="text" class="form-control" id="que_title" readonly>
+                        <input type="hidden" class="form-control" id="qna_idx">
+                    </div>
+                    <div class="form-group">
+                        <label for="que_content" class="col-form-label">질문내용</label>
+                        <textarea class="form-control" id="que_content" readonly></textarea>
+                    </div>
+					<div class="form-group">
+                        <label for="ans_title" class="col-form-label">답변제목</label>
+                        <input type="text" class="form-control" id="ans_title" readonly>
+                    </div>
+					<div class="form-group">
+                        <label for="ans_content" class="col-form-label">답변내용</label>
+                        <textarea class="form-control" id="ans_content" readonly></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+	
+ 	
+ 
+ 	$(document).ready(function() {   // ready event start
+		
+ 		// 답변보기 클릭시
+ 		$("button[name='btn_qna_modify']").on("click", function() {
+			let qna_idx = $(this).data("qna_idx");
+			// console.log(qna_idx);
+			
+			$.ajax({
+				url: '/user/myqna_form/' + qna_idx,
+				headers: {
+					"Content-Type" : "application/json", "x-HTTP-Method-Override" : "GET"
+				},
+				type:'get',
+				dataType:'json',
+				success: function(result) {
+					console.log(result);
+
+					// modal에 qna 출력작업
+					$("#qna_idx").val(result.qna_idx);
+					$("#que_title").val(result.que_title);
+					$("#que_content").val(result.que_content);
+					let imageUrl = `/admin/qnaboard/image_display?dateFolderName=${result.pro_up_folder}&fileName=${result.pro_img}`;
+					$("#product_image").attr("src", imageUrl);
+					$("#ans_title").val(result.ans_title);
+					$("#ans_content").val(result.ans_content);
+					
+					
+					// modal 보여주기
+					$("#adminqna_modal").modal('show');
+				}
+			});
+ 		});
+			
+ 		// 내 qna삭제
+		$("button[name='btn_qna_delete']").on("click", function() {
+			
+			if(!confirm("삭제하시겠습니까?")) return;
+
+			let qna_idx = $(this).data("qna_idx");
+
+			$.ajax({
+				url: '/user/myqna_delete/' + qna_idx,
+				headers: {
+					"Content-Type" : "application/json", "x-HTTP-Method-Override" : "DELETE"
+				},
+				type: 'delete',
+				datatype: 'text',
+				success: function(result) {
+					alert("QnA 삭제됨");
+					location.reload(); // 페이지 새로고침 
+				}
+
+			});
+		});
+	
+	 }); // ready event end
+
+
+</script>
+ </th:block>
+  </body>
+</html>

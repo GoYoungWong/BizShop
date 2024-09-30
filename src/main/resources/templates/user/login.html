@@ -1,0 +1,82 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/baseLayout}">
+  
+  <body>
+  
+
+
+<th:block layout:fragment="content">
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+  <div class="container">
+    <h1 class="mt-3 mb-4 text-center"><b>로그인</b></h1>
+    <div class="row">
+        <div class="col">
+            <div class="card card-info">
+                <div class="card-header">
+            </div>
+                <form class="form-horizontal" id="loginForm" th:action="@{/user/login}" method="post">
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label for="user_id" class="col-sm-4 col-form-label">아이디</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="user_id" name="user_id" placeholder="아이디를 입력하세요." value="user01">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="user_pwd" class="col-sm-4 col-form-label">비밀번호</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="user_pwd" name="user_pwd" placeholder="비밀번호를 입력하세요." value="1234">
+                        </div>
+                    </div>   
+                </div>
+                
+                <div class="card-footer text-center">
+                <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnJoin">로그인</button>
+            </div>
+            
+            <div class="card-footer text-center">
+				<div class="form-group row">
+					<div class="col-sm-6">
+						<a th:href="@{/oauth2/kakaologin}">
+							<img th:src="@{/image/sns/kakao_login_large_narrow.png}" style="width:310px;height:80px;">
+						</a>					
+					</div>
+				</div>            
+            </div>
+        
+        </form>
+        <div class="card-footer text-center">
+            <a th:href="@{/user/idfind}">아이디 찾기</a><span> / </span> <a th:href="@{/user/pwfind}">비밀번호 찾기</a>
+        </div>
+        </div>
+    </div>
+</div>
+<div th:replace ="~{layout/comm/footer :: footerFragment}" ></div>
+</div>
+</main>
+  
+</th:block>
+
+ <th:block layout:fragment="script">
+ <!-- 각각의 페이지에서 필요한 자바스크립트 작성 -->
+ <script th:inline="javascript">
+        // 입력한 아이디와 비밀번호가 다르면 나오는 안내문
+        let msg = [[${msg}]];  // '${msg}' "failPW" or "failID"
+        if(msg == "failID") {
+            alert("아이디를 정확히 입력해주세요.");
+            document.getElementById("user_id").focus();
+        }else if(msg == "failPW") {
+            alert("비밀번호를 정확히 입력해주세요.");
+            document.getElementById("user_id").focus();
+        }else if(msg == "success") {
+        	alert("아이디를 메일발송했습니다.");
+        }
+
+
+  </script>
+ </th:block>
+  </body>
+</html>

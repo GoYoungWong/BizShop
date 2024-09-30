@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:insert="~{admin/layout/comm/plugin_1}">
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+
+<header th:replace="~{admin/layout/comm/header}">
+</header>
+
+<aside th:replace="~{admin/layout/comm/aside_left}">
+</aside>
+
+<th:block layout:fragment="content">
+
+</th:block>
+
+<footer th:replace="~{admin/layout/comm/footer}">
+</footer>
+
+<aside th:replace="~{admin/layout/comm/aside_right}">
+</aside>
+
+<th:block th:replace="~{admin/layout/comm/plugin_2}"></th:block>
+
+<th:block layout:fragment="script">
+  	<!-- 각각의 페이지에서 필요한 자바스크립트 작성(재정의) -->
+  	</th:block>
+
+</div>
+</body>
+</html>

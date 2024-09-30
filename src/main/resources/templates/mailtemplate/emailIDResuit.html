@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"> <!-- 타임리프 페이지 없으면 일반 JSP파일 -->
+
+<body>
+<div style="margin:100px;">
+    <h1> 안녕하세요.</h1>
+    <h1> 쇼핑몰사이트 BizShop 입니다.</h1>
+    <br>
+    <p> 아이디를 이용하여 로그인 하세요.</p>
+    <br>
+
+    <div align="center" style="border:1px solid black; font-family:verdana;">
+        <h3 style="color:blue"> 아이디는 다음과 같습니다. </h3>
+        <div style="font-size:130%" th:text="${authcode}"> </div>
+    </div>
+    <br/>
+</div>
+
+</body>
+</html>
